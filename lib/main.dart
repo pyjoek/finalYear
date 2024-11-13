@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
 
   @override 
   Widget build(BuildContext context) {
-    return  MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MyHome(),
     );
@@ -18,32 +18,72 @@ class MyApp extends StatelessWidget {
 
 class MyHome extends StatefulWidget {
   @override 
-  Myhome createState() => Myhome();
+  MyHomeState createState() => MyHomeState();
 }
 
-class Myhome extends State<MyHome> {
-
+class MyHomeState extends State<MyHome> {
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Row(
-          children: [
-            InkWell(
-              onTap: () => {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => Login())),
-              },
-              child: Text("login"),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Centered Logo
+          Padding(
+            padding: const EdgeInsets.only(top: 100.0),
+            child: Center(
+              child: Text(
+                "BARAKA",
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
             ),
-             InkWell(
-              onTap: () => {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => Register())),
-              },
-              child: Text("register"),
-            )
-          ],
-        ),
+          ),
+          Spacer(), // Spacer pushes the buttons to the bottom
+          // Login and Register Buttons
+          Padding(
+            padding: const EdgeInsets.only(bottom: 50.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    "Login",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Register()));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    "Register",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
-} 
+}
