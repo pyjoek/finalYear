@@ -1,4 +1,4 @@
-# baraka
+# Baraka
 
 Final year project 2024/2025
 
