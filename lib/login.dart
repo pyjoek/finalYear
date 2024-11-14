@@ -1,5 +1,8 @@
-import 'package:baraka/main.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:baraka/student.dart'; // Make sure this file exists
 
 class Login extends StatefulWidget {
   @override
@@ -10,6 +13,38 @@ class _LoginState extends State<Login> {
   late double height, width;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> login() async {
+    // Replace with your Flask backend URL
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1:5000/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': _emailController.text,
+        'password': _passwordController.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      String token = data['access_token'];
+
+      // Save token using SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('token', token);
+
+      // Navigate to Student Page after successful login
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => StudentPage()),
+      );
+    } else {
+      // Handle login failure
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid credentials')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,24 +131,17 @@ class _LoginState extends State<Login> {
                     SizedBox(height: 20),
                     // Login Button
                     ElevatedButton(
-                      onPressed: () {
-                        // Login button pressed
-                      },
+                      onPressed: login, // Use login function here
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14.0),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: InkWell(
-                        onTap: () => {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => MyHome()))
-                        },
-                        child: Text(
+                      child: Text(
                         "Login",
                         style: TextStyle(fontSize: 18),
                       ),
-                      )
                     ),
                   ],
                 ),
