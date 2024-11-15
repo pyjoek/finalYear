@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'login.dart'; // Your login page
 import 'package:fl_chart/fl_chart.dart';
-import 'package:baraka/login.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class StudentPage extends StatefulWidget {
   @override
@@ -9,42 +11,56 @@ class StudentPage extends StatefulWidget {
 }
 
 class _StudentPageState extends State<StudentPage> {
-  final String studentName = "John Doe";
-  final String department = "Computer Science";
+  final storage = FlutterSecureStorage();
+  String studentName = '';
+  String department = '';
 
-  // Sample data for attendance (from January till now)
-  final List<FlSpot> attendanceData = [
-    FlSpot(0, 3),  // January
-    FlSpot(1, 4),  // February
-    FlSpot(2, 3),  // March
-    FlSpot(3, 5),  // April
-    FlSpot(4, 4),  // May
-    FlSpot(5, 6),  // June
-    FlSpot(6, 4),  // July
-    FlSpot(7, 5),  // August
-    FlSpot(8, 6),  // September
-    FlSpot(9, 7),  // October
-    FlSpot(10, 8), // November (current month)
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _getUserDetails();
+  }
+
+  // Get user details from the API
+  _getUserDetails() async {
+    String? token = await storage.read(key: 'access_token');
+    if (token != null) {
+      var response = await http.get(
+        Uri.parse('http://localhost:5000/protected'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        setState(() {
+          studentName = data['email'];
+          print(studentName);
+          department = data['department'] ?? "Not available";
+        });
+      } else {
+        print('Error: ${response.statusCode}');
+        print(response.body);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: Text("Student Dashboard"),
         centerTitle: true,
-        leading: null,
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: () {
+            onPressed: () async {
+              await storage.delete(key: 'access_token');
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => Login()), // Navigate to Login on logout
+                MaterialPageRoute(builder: (context) => Login()),
               );
             },
           )
@@ -56,7 +72,6 @@ class _StudentPageState extends State<StudentPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Student Name and Department
             Text(
               "Name: $studentName",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -67,7 +82,6 @@ class _StudentPageState extends State<StudentPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             SizedBox(height: 20),
-
             // Attendance Graph
             Text(
               "Attendance (January - Now)",
@@ -80,7 +94,12 @@ class _StudentPageState extends State<StudentPage> {
                 LineChartData(
                   lineBarsData: [
                     LineChartBarData(
-                      spots: attendanceData,
+                      spots: [
+                        FlSpot(0, 3),  // Example data
+                        FlSpot(1, 4),
+                        FlSpot(2, 3),
+                        FlSpot(3, 5),
+                      ],
                       isCurved: true,
                       colors: [Colors.blue],
                       barWidth: 4,
@@ -89,66 +108,8 @@ class _StudentPageState extends State<StudentPage> {
                   ],
                   titlesData: FlTitlesData(
                     leftTitles: SideTitles(showTitles: true),
-                    bottomTitles: SideTitles(
-                      showTitles: true,
-                      getTextStyles: (context, value) => TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      getTitles: (value) {
-                        // Mapping month index to month name
-                        switch (value.toInt()) {
-                          case 0:
-                            return 'Jan';
-                          case 1:
-                            return 'Feb';
-                          case 2:
-                            return 'Mar';
-                          case 3:
-                            return 'Apr';
-                          case 4:
-                            return 'May';
-                          case 5:
-                            return 'Jun';
-                          case 6:
-                            return 'Jul';
-                          case 7:
-                            return 'Aug';
-                          case 8:
-                            return 'Sep';
-                          case 9:
-                            return 'Oct';
-                          case 10:
-                            return 'Nov';
-                          default:
-                            return '';
-                        }
-                      },
-                    ),
+                    bottomTitles: SideTitles(showTitles: true),
                   ),
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: Colors.black12),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // QR Code Scanner Button
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => QRViewExample()),
-                );
-              },
-              icon: Icon(Icons.qr_code),
-              label: Text("Scan QR Code"),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 14.0, horizontal: 24.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
@@ -159,44 +120,28 @@ class _StudentPageState extends State<StudentPage> {
   }
 }
 
-// QR Code Scanner Page
-class QRViewExample extends StatefulWidget {
-  @override
-  _QRViewExampleState createState() => _QRViewExampleState();
-}
+// Login API interaction
+Future<void> login(String email, String password, BuildContext context) async {
+  var response = await http.post(
+    Uri.parse('http://localhost:5000/login'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'email': email, 'password': password}),
+  );
 
-class _QRViewExampleState extends State<QRViewExample> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
+  if (response.statusCode == 200) {
+    var data = jsonDecode(response.body);
+    String token = data['access_token'];
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text("Scan QR Code"),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: QRView(
-          key: qrKey,
-          onQRViewCreated: _onQRViewCreated,
-        ),
-      ),
+    // Store token securely
+    final storage = FlutterSecureStorage();
+    await storage.write(key: 'access_token', value: token);
+
+    // Navigate to the StudentPage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => StudentPage()),
     );
-  }
-
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      // Handle scanned QR code result here
-      print("QR Code Result: ${scanData.code}");
-    });
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
+  } else {
+    print('Login failed: ${response.body}');
   }
 }

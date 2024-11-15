@@ -1,7 +1,5 @@
 import 'package:baraka/main.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class Register extends StatefulWidget {
   @override
@@ -15,55 +13,6 @@ class _RegisterState extends State<Register> {
   final TextEditingController _teacherCodeController = TextEditingController();
   String? _selectedUserType;
   String? _selectedDepartment;
-
-  // Function to handle registration
-  Future<void> _registerUser() async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showErrorDialog("Passwords do not match!");
-      return;
-    }
-
-    if (_selectedUserType == null) {
-      _showErrorDialog("Please select a user type.");
-      return;
-    }
-
-    final url = Uri.parse('http://127.0.0.1:5000/register');  // Replace with actual backend URL
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': _emailController.text,
-        'password': _passwordController.text,
-        'user_type': _selectedUserType,
-        'department': _selectedDepartment,
-        'teacher_code': _teacherCodeController.text,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => MyHome()));
-    } else {
-      _showErrorDialog("Registration failed: ${json.decode(response.body)['message']}");
-    }
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Error"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("OK"),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +62,7 @@ class _RegisterState extends State<Register> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Email TextField
                       TextField(
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -124,6 +74,7 @@ class _RegisterState extends State<Register> {
                         ),
                       ),
                       SizedBox(height: 10),
+                      // Password TextField
                       TextField(
                         controller: _passwordController,
                         obscureText: true,
@@ -136,6 +87,7 @@ class _RegisterState extends State<Register> {
                         ),
                       ),
                       SizedBox(height: 10),
+                      // Confirm Password TextField
                       TextField(
                         controller: _confirmPasswordController,
                         obscureText: true,
@@ -148,12 +100,13 @@ class _RegisterState extends State<Register> {
                         ),
                       ),
                       SizedBox(height: 10),
+                      // User Type Dropdown
                       DropdownButtonFormField<String>(
                         value: _selectedUserType,
                         onChanged: (newValue) {
                           setState(() {
                             _selectedUserType = newValue;
-                            _selectedDepartment = null;
+                            _selectedDepartment = null; // Reset department selection when user type changes
                           });
                         },
                         decoration: InputDecoration(
@@ -171,7 +124,10 @@ class _RegisterState extends State<Register> {
                         }).toList(),
                       ),
                       SizedBox(height: 10),
+                      
+                      // Conditional Fields based on User Type
                       if (_selectedUserType == 'Student') ...[
+                        // Department Dropdown for Students
                         DropdownButtonFormField<String>(
                           value: _selectedDepartment,
                           onChanged: (newValue) {
@@ -181,6 +137,7 @@ class _RegisterState extends State<Register> {
                           },
                           decoration: InputDecoration(
                             labelText: 'Select Department',
+                            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 6), // Further reduced padding
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -191,12 +148,16 @@ class _RegisterState extends State<Register> {
                           ].map<DropdownMenuItem<String>>((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
-                              child: Text(value),
+                              child: Text(
+                                value,
+                                style: TextStyle(fontSize: 14), // Font size remains the same
+                              ),
                             );
                           }).toList(),
                         ),
                         SizedBox(height: 10),
                       ] else if (_selectedUserType == 'Teacher') ...[
+                        // Teacher Code TextField
                         TextField(
                           controller: _teacherCodeController,
                           decoration: InputDecoration(
@@ -210,17 +171,25 @@ class _RegisterState extends State<Register> {
                         SizedBox(height: 10),
                       ],
                       SizedBox(height: 20),
+                      // Register Button
                       ElevatedButton(
-                        onPressed: _registerUser,
+                        onPressed: () {
+                          // Register button pressed
+                        },
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 14.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text(
-                          "Register",
-                          style: TextStyle(fontSize: 18),
+                        child: InkWell(
+                          onTap: () => {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => MyHome()))
+                          },
+                          child: Text(
+                            "Register",
+                            style: TextStyle(fontSize: 18),
+                          ),
                         ),
                       ),
                     ],
