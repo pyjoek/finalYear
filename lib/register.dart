@@ -1,4 +1,4 @@
-import 'package:baraka/main.dart';
+import 'package:finalyear/main.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,34 +18,55 @@ class _RegisterState extends State<Register> {
 
   // Function to handle registration
   Future<void> _registerUser() async {
+    // Validate passwords
     if (_passwordController.text != _confirmPasswordController.text) {
       _showErrorDialog("Passwords do not match!");
       return;
     }
 
+    // Validate email format
+    if (!_emailController.text.contains('@')) {
+      _showErrorDialog("Invalid email address.");
+      return;
+    }
+
+    // Ensure user type is selected
     if (_selectedUserType == null) {
       _showErrorDialog("Please select a user type.");
       return;
     }
 
-    final url = Uri.parse('http://127.0.0.1:5000/register');  // Replace with actual backend URL
+    // Ensure department or teacher code is provided based on user type
+    if (_selectedUserType == "Student" && _selectedDepartment == null) {
+      _showErrorDialog("Please select a department.");
+      return;
+    }
+    if (_selectedUserType == "Teacher" && _teacherCodeController.text.isEmpty) {
+      _showErrorDialog("Please provide the teacher code.");
+      return;
+    }
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': _emailController.text,
-        'password': _passwordController.text,
-        'user_type': _selectedUserType,
-        'department': _selectedDepartment,
-        'teacher_code': _teacherCodeController.text,
-      }),
-    );
+    final url = Uri.parse('http://127.0.0.1:5000/register'); // Update for your backend
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': _emailController.text,
+          'password': _passwordController.text,
+          'user_type': _selectedUserType,
+          'department': _selectedDepartment,
+          'teacher_code': _teacherCodeController.text,
+        }),
+      );
 
-    if (response.statusCode == 201) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => MyHome()));
-    } else {
-      _showErrorDialog("Registration failed: ${json.decode(response.body)['message']}");
+      if (response.statusCode == 201) {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => MyHome()));
+      } else {
+        _showErrorDialog("Registration failed: ${json.decode(response.body)['message']}");
+      }
+    } catch (error) {
+      _showErrorDialog("An error occurred: $error");
     }
   }
 

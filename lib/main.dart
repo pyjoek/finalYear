@@ -1,6 +1,6 @@
+import 'package:finalyear/login.dart';
 import 'package:flutter/material.dart';
-import 'package:baraka/login.dart';
-import 'package:baraka/register.dart';
+import 'package:finalyear/register.dart';
 
 void main() => runApp(MyApp());
 

@@ -33,11 +33,52 @@ class Student(db.Model):
 with app.app_context():
     db.create_all()
 
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    user_type = data.get('user_type')
+    department = data.get('department')
+    teacher_code = data.get('teacher_code')
+
+    # Check for required fields
+    if not email or not password or not user_type:
+        return jsonify(message="Email, password, and user type are required."), 400
+
+    # Register as Teacher
+    if user_type == 'Teacher':
+        if not teacher_code:
+            return jsonify(message="Teacher code is required for registration."), 400
+        if Teacher.query.filter_by(email=email).first():
+            return jsonify(message="Teacher with this email already exists."), 400
+
+        new_teacher = Teacher(email=email, password=password, teacher_code=teacher_code)
+        db.session.add(new_teacher)
+        db.session.commit()
+        return jsonify(message="Teacher registered successfully."), 201
+
+    # Register as Student
+    elif user_type == 'Student':
+        if not department:
+            return jsonify(message="Department is required for student registration."), 400
+        if Student.query.filter_by(email=email).first():
+            return jsonify(message="Student with this email already exists."), 400
+
+        new_student = Student(email=email, password=password, department=department)
+        db.session.add(new_student)
+        db.session.commit()
+        return jsonify(message="Student registered successfully."), 201
+
+    # Invalid user type
+    return jsonify(message="Invalid user type."), 400
+
+# Login route
 @app.route('/login', methods=['POST'])
 def login():
     email = request.json.get('email', None)
     password = request.json.get('password', None)
-    
+
     # Try to find the user as a teacher first
     teacher = Teacher.query.filter_by(email=email).first()
     if teacher and teacher.password == password:
@@ -47,7 +88,7 @@ def login():
             user_type="Teacher",
             email=teacher.email
         ), 200
-    
+
     # If not a teacher, try to find the user as a student
     student = Student.query.filter_by(email=email).first()
     if student and student.password == password:
@@ -61,37 +102,11 @@ def login():
 
     return jsonify(message="Invalid credentials"), 401
 
-@app.route('/protected', methods=['GET'])
-@jwt_required()
-def protected():
-    current_user_id = get_jwt_identity()
-
-    # Check if the current user is a teacher or student
-    teacher = Teacher.query.get(current_user_id)
-    if teacher:
-        return jsonify(
-            message="You have access to this route",
-            user_type="Teacher",
-            email=teacher.email
-        ), 200
-
-    student = Student.query.get(current_user_id)
-    if student:
-        return jsonify(
-            message="You have access to this route",
-            user_type="Student",
-            email=student.email,
-            department=student.department
-        ), 200
-
-    return jsonify(message="User not found"), 404
-
-# Logout route to invalidate the user's session
+# Logout route
 @app.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():
     response = jsonify(message="Logout successful")
-    # Remove the JWT token by unsetting the cookies
     unset_jwt_cookies(response)
     return response, 200
 

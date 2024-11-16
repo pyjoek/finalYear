@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:baraka/student.dart'; // Make sure this file exists
+import 'package:finalyear/student.dart'; // Make sure this file exists
+import 'package:finalyear/teacher.dart'; // Make sure this file exists
 
 class Login extends StatefulWidget {
   @override
@@ -15,33 +16,52 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> login() async {
-    // Replace with your Flask backend URL
-    final response = await http.post(
-      Uri.parse('http://127.0.0.1:5000/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      String token = data['access_token'];
-
-      // Save token using SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString('token', token);
-
-      // Navigate to Student Page after successful login
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => StudentPage()),
+    try {
+      // Replace with your Flask backend URL
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:5000/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        }),
       );
-    } else {
-      // Handle login failure
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        String token = data['access_token'];
+        String userType = data['user_type']; // Extract user type from response
+
+        // Save token using SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('token', token);
+
+        // Navigate based on user type
+        if (userType == 'Student') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => StudentPage()),
+          );
+        } else if (userType == 'Teacher') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TeacherPage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Unknown user type')),
+          );
+        }
+      } else {
+        // Handle login failure
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid credentials')),
+        );
+      }
+    } catch (e) {
+      // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid credentials')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
