@@ -13,6 +13,7 @@ class _RegisterState extends State<Register> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _teacherCodeController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController(); // Added for name
   String? _selectedUserType;
   String? _selectedDepartment;
 
@@ -27,6 +28,12 @@ class _RegisterState extends State<Register> {
     // Validate email format
     if (!_emailController.text.contains('@')) {
       _showErrorDialog("Invalid email address.");
+      return;
+    }
+
+    // Ensure name is entered
+    if (_nameController.text.isEmpty) {
+      _showErrorDialog("Please enter your name.");
       return;
     }
 
@@ -52,6 +59,7 @@ class _RegisterState extends State<Register> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
+          'name': _nameController.text, // Include name
           'email': _emailController.text,
           'password': _passwordController.text,
           'user_type': _selectedUserType,
@@ -134,6 +142,17 @@ class _RegisterState extends State<Register> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      TextField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Name', // Name field
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
                       TextField(
                         controller: _emailController,
                         decoration: InputDecoration(
