@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:finalyear/student.dart'; // Make sure this file exists
-import 'package:finalyear/teacher.dart'; // Make sure this file exists
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:finalyear/student.dart'; // Ensure this file exists
+import 'package:finalyear/teacher.dart'; // Ensure this file exists
 
 class Login extends StatefulWidget {
   @override
@@ -11,15 +11,21 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  final FlutterSecureStorage storage = FlutterSecureStorage();  // Correctly initializing FlutterSecureStorage
   late double height, width;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // Future<void> clearCache() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   await prefs.clear(); // Clears all stored preferences
+  //   print('Cache cleared');
+  // }
+
   Future<void> login() async {
     try {
-      // Replace with your Flask backend URL
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/login'),
+        Uri.parse('http://127.0.0.1:5000/login'),  // Replace with your Flask backend URL
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': _emailController.text,
@@ -30,36 +36,30 @@ class _LoginState extends State<Login> {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         String token = data['access_token'];
-        String userType = data['user_type']; // Extract user type from response
 
-        // Save token using SharedPreferences
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setString('token', token);
+        // Save token securely using FlutterSecureStorage
+        await storage.write(key: 'access_token', value: token);
+        print('Token saved: $token'); // For debugging
 
-        // Navigate based on user type
+        // Navigate to the next page based on user type
+        String userType = data['user_type'];
         if (userType == 'Student') {
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => StudentPage()),
           );
         } else if (userType == 'Teacher') {
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => TeacherPage()),
           );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Unknown user type')),
-          );
         }
       } else {
-        // Handle login failure
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Invalid credentials')),
         );
       }
     } catch (e) {
-      // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -103,7 +103,6 @@ class _LoginState extends State<Login> {
                 ),
               ],
             ),
-            // Login Form Container
             Positioned(
               left: width * 0.1,
               right: width * 0.1,
@@ -124,7 +123,6 @@ class _LoginState extends State<Login> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Email TextField
                     TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
@@ -136,7 +134,6 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    // Password TextField
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
@@ -149,9 +146,8 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    // Login Button
                     ElevatedButton(
-                      onPressed: login, // Use login function here
+                      onPressed: login,
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14.0),
                         shape: RoundedRectangleBorder(
