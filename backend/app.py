@@ -16,6 +16,7 @@ class Teacher(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False)  # Name field added
     teacher_code = db.Column(db.String(50), nullable=False)
 
     def __repr__(self):
@@ -63,7 +64,7 @@ def register():
         if Teacher.query.filter_by(email=email).first():
             return jsonify(message="Teacher with this email already exists."), 400
 
-        new_teacher = Teacher(email=email, password=password, teacher_code=teacher_code)
+        new_teacher = Teacher(email=email, password=password, name=name, teacher_code=teacher_code)
         db.session.add(new_teacher)
         db.session.commit()
         return jsonify(message="Teacher registered successfully."), 201
@@ -172,6 +173,25 @@ def mark_attendance():
     db.session.commit()
 
     return jsonify(message="Attendance marked as present for today."), 200
+
+@app.route('/teacher/details', methods=['GET'])
+@jwt_required()
+def teacher_details():
+    """
+    Returns the details of the logged-in teacher.
+    """
+    teacher_id = get_jwt_identity()
+    teacher = db.session.get(Teacher, teacher_id)  # Fetch the teacher from the database using the token's identity
+
+    if teacher:
+        return jsonify(
+            id=teacher.id,
+            email=teacher.email,
+            teacher_code=teacher.teacher_code,
+            name=teacher.name
+        ), 200
+
+    return jsonify(message="Teacher not found or invalid token."), 404
 
 @app.route('/logout', methods=['POST'])
 @jwt_required()
