@@ -53,7 +53,7 @@ class _RegisterState extends State<Register> {
       return;
     }
 
-    final url = Uri.parse('http://127.0.0.1:5000/register'); // Update for your backend
+    final url = Uri.parse('http://127.0.0.1:5000/register'); 
     try {
       final response = await http.post(
         url,
