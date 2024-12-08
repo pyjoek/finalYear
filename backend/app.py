@@ -193,6 +193,33 @@ def teacher_details():
 
     return jsonify(message="Teacher not found or invalid token."), 404
 
+@app.route('/teacher/students', methods=['GET'])
+@jwt_required()
+def list_students():
+    """
+    List all students and send their details to the teacher's page.
+    """
+    identity = get_jwt_identity()
+
+    # Ensure the requester is a teacher
+    # if identity['role'] != 'Teacher':
+    #     return jsonify(message="Only teachers can view the student list."), 403
+
+    # Query all students
+    students = Student.query.all()
+    student_list = [
+        {
+            'id': student.id,
+            'name': student.name,
+            'email': student.email,
+            'department': student.department
+        }
+        for student in students
+    ]
+
+    return jsonify(students=student_list), 200
+
+
 @app.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():

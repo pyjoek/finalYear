@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'login.dart';
-import 'package:fl_chart/fl_chart.dart';  // For Graph
+import 'package:fl_chart/fl_chart.dart'; // For graph rendering
 
 class TeacherPage extends StatefulWidget {
   @override
@@ -12,12 +12,12 @@ class TeacherPage extends StatefulWidget {
 
 class _TeacherPageState extends State<TeacherPage> {
   final storage = FlutterSecureStorage();
-  String teacherName = '';
-  String teacherEmail = '';
+  String teacherName = 'Loading...';
+  String teacherEmail = 'Loading...';
   bool isLoading = true;
-  String selectedPage = 'Teacher Details';  // Track the selected page
-  List<Map<String, String>> studentList = [];  // Store student details for listing
-  List<FlSpot> attendanceGraphData = []; // Dynamic graph data
+  String selectedPage = 'Teacher Details'; // Tracks the selected page
+  List<Map<String, String>> studentList = [];
+  List<FlSpot> attendanceGraphData = [];
 
   @override
   void initState() {
@@ -25,99 +25,128 @@ class _TeacherPageState extends State<TeacherPage> {
     _fetchData();
   }
 
-  // Fetch all data
   Future<void> _fetchData() async {
     setState(() => isLoading = true);
-    await _getTeacherDetails();
-    await _getStudentList();
-    await _getAttendanceData();
-    setState(() => isLoading = false);
+    try {
+      await _getTeacherDetails();
+      await _getStudentList();
+      await _getAttendanceData();
+    } catch (e) {
+      _showError('Failed to fetch data. Please try again later.');
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
-  // Fetch teacher details
   Future<void> _getTeacherDetails() async {
-    try {
-      String? token = await storage.read(key: 'access_token');
-      if (token != null) {
-        var response = await http.get(
-          Uri.parse('http://127.0.0.1:5000/teacher/details'),
-          headers: {'Authorization': 'Bearer $token'},
-        );
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          print(data);
-          setState(() {
-            teacherName = data['name'];
-            teacherEmail = data['email'];
-            // print("for teacher `$teacherEmail`, `$teacherName`");
-          });
-        } else if (response.statusCode == 401) {
-          _redirectToLogin();
-        } else {
-          _showError('Failed to fetch teacher details.');
-        }
+    String? token = await storage.read(key: 'access_token');
+    if (token != null) {
+      final response = await _makeApiCall(
+        endpoint: '/teacher/details',
+        token: token,
+      );
+      if (response != null) {
+        setState(() {
+          teacherName = response['name'];
+          teacherEmail = response['email'];
+        });
       }
-    } catch (e) {
-      _showError('An error occurred while fetching teacher details.');
     }
   }
 
-  // Fetch student list
-  Future<void> _getStudentList() async {
-    try {
-      String? token = await storage.read(key: 'access_token');
-      if (token != null) {
-        var response = await http.get(
-          Uri.parse('http://127.0.0.1:5000/teacher/students'),
-          headers: {'Authorization': 'Bearer $token'},
-        );
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          setState(() {
-            studentList = List<Map<String, String>>.from(data['students']);
-          });
-        } else if (response.statusCode == 401) {
-          _redirectToLogin();
-        } else {
-          _showError('Failed to fetch student list.');
-        }
-      }
-    } catch (e) {
-      _showError('An error occurred while fetching student list.');
-    }
-  }
+  // Future<void> _getStudentList() async {
+  //   String? token = await storage.read(key: 'access_token');
+  //   if (token != null) {
+  //     final response = await _makeApiCall(
+  //       endpoint: '/teacher/students',
+  //       token: token,
+  //     );
+  //     if (response != null) {
+  //       setState(() {
+  //         studentList = List<Map<String, String>>.from(response['students']);
+  //       });
+  //     }
+  //   }
+  // }
 
-  // Fetch attendance data for the graph
+  void _showErrorMessage(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
+}
+
+Future<void> _getStudentList() async {
+  try {
+    String? token = await storage.read(key: 'access_token');
+    if (token == null) {
+      throw Exception("Access token not found. Please log in.");
+    }
+
+    final response = await _makeApiCall(
+      endpoint: '/teacher/students',
+      token: token,
+    );
+
+    if (response != null && response['students'] != null) {
+      setState(() {
+        studentList = List<Map<String, String>>.from(
+          response['students'].map((student) => student.map((key, value) => MapEntry(key, value.toString())))
+        );
+      });
+    } else {
+      throw Exception("Invalid response from the server.");
+    }
+  } catch (error) {
+    print("Error fetching student list: $error");
+    _showErrorMessage("Failed to load student list. Please try again.");
+  }
+}
+
   Future<void> _getAttendanceData() async {
-    try {
-      String? token = await storage.read(key: 'access_token');
-      if (token != null) {
-        var response = await http.get(
-          Uri.parse('http://127.0.0.1:5000/teacher/attendance/data'),
-          headers: {'Authorization': 'Bearer $token'},
-        );
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          setState(() {
-            attendanceGraphData = List<FlSpot>.from(
-              data['attendance'].map((point) => FlSpot(
-                    point['day'].toDouble(),
-                    point['percentage'].toDouble(),
-                  )),
-            );
-          });
-        } else if (response.statusCode == 401) {
-          _redirectToLogin();
-        } else {
-          _showError('Failed to fetch attendance data.');
-        }
+    String? token = await storage.read(key: 'access_token');
+    if (token != null) {
+      final response = await _makeApiCall(
+        endpoint: '/teacher/attendance/data',
+        token: token,
+      );
+      if (response != null) {
+        setState(() {
+          attendanceGraphData = List<FlSpot>.from(
+            response['attendance'].map(
+              (point) => FlSpot(
+                point['day'].toDouble(),
+                point['percentage'].toDouble(),
+              ),
+            ),
+          );
+        });
       }
-    } catch (e) {
-      _showError('An error occurred while fetching attendance data.');
     }
   }
 
-  // Redirect to login if unauthorized
+  Future<Map<String, dynamic>?> _makeApiCall({
+    required String endpoint,
+    required String token,
+  }) async {
+    final url = Uri.parse('http://127.0.0.1:5000$endpoint');
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        _redirectToLogin();
+      } else {
+        _showError('Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      _showError('Failed to connect to the server.');
+    }
+    return null;
+  }
+
   void _redirectToLogin() {
     Navigator.pushReplacement(
       context,
@@ -125,40 +154,18 @@ class _TeacherPageState extends State<TeacherPage> {
     );
   }
 
-  // Show error message
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
-  // Logout with confirmation
-  Future<void> _logout() async {
-    bool? confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Logout'),
-        content: Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Logout')),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await storage.delete(key: 'access_token');
-      _redirectToLogin();
-    }
-  }
-
-  // Build the drawer
   Drawer _buildDrawer() {
     return Drawer(
       child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
+        children: [
           DrawerHeader(
-            child: Text('Teacher Dashboard', style: TextStyle(fontSize: 24, color: Colors.white)),
+            child: Text('Teacher Dashboard', style: TextStyle(color: Colors.white)),
             decoration: BoxDecoration(color: Colors.black),
           ),
           ListTile(
@@ -173,75 +180,53 @@ class _TeacherPageState extends State<TeacherPage> {
             title: Text('Student Graph'),
             onTap: () => setState(() => selectedPage = 'Student Graph'),
           ),
-          ListTile(
-            title: Text('Logout'),
-            onTap: _logout,
-          ),
         ],
       ),
     );
   }
 
-  // Build pages
   Widget _buildTeacherDetailsPage() => Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Teacher: $teacherName", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text("Email: $teacherEmail", style: TextStyle(fontSize: 18)),
+            Text("Name: $teacherName"),
+            Text("Email: $teacherEmail"),
           ],
         ),
       );
 
-  Widget _buildStudentListPage() => ListView.builder(
-        itemCount: studentList.length,
-        itemBuilder: (context, index) {
-          var student = studentList[index];
-          return ListTile(
-            title: Text(student['name'] ?? 'Unknown'),
-            subtitle: Text(student['email'] ?? 'No email'),
-          );
-        },
-      );
+  Widget _buildStudentListPage() => studentList.isEmpty
+      ? Center(child: Text('No students found.'))
+      : ListView.builder(
+          itemCount: studentList.length,
+          itemBuilder: (context, index) {
+            var student = studentList[index];
+            return ListTile(
+              title: Text(student['name'] ?? 'Unknown'),
+              subtitle: Text(student['email'] ?? 'No email'),
+            );
+          },
+        );
 
-  Widget _buildStudentGraphPage() => Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text('Student Attendance Graph', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Container(
-              height: 300,
-              child: LineChart(
-                LineChartData(
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: attendanceGraphData,
-                      isCurved: true,
-                      colors: [Colors.blue],
-                    ),
-                  ],
-                  titlesData: FlTitlesData(
-                    leftTitles: SideTitles(showTitles: true),
-                    bottomTitles: SideTitles(showTitles: true),
-                  ),
-                ),
+  Widget _buildStudentGraphPage() => attendanceGraphData.isEmpty
+      ? Center(child: Text('No attendance data available.'))
+      : LineChart(
+          LineChartData(
+            lineBarsData: [
+              LineChartBarData(
+                spots: attendanceGraphData,
+                isCurved: true,
+                colors: [Colors.blue],
               ),
-            ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text("Teacher Dashboard"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text("Teacher Dashboard")),
       drawer: _buildDrawer(),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
