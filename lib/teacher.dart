@@ -38,6 +38,20 @@ class _TeacherPageState extends State<TeacherPage> {
     }
   }
 
+
+  // Logout function to clear both SharedPreferences and FlutterSecureStorage
+  Future<void> Logout(BuildContext context) async {
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // await prefs.clear();  // Clear saved preferences (including token)
+    await storage.delete(key: 'access_token');  // Remove token from FlutterSecureStorage
+    print('Logged out and cache cleared');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Login()),
+    );
+  }
+
   Future<void> _getTeacherDetails() async {
     String? token = await storage.read(key: 'access_token');
     if (token != null) {
@@ -65,6 +79,7 @@ class _TeacherPageState extends State<TeacherPage> {
   //       setState(() {
   //         studentList = List<Map<String, String>>.from(response['students']);
   //       });
+  //       print("hello");
   //     }
   //   }
   // }
@@ -179,6 +194,10 @@ Future<void> _getStudentList() async {
           ListTile(
             title: Text('Student Graph'),
             onTap: () => setState(() => selectedPage = 'Student Graph'),
+          ),
+          ListTile(
+            title: Text('Log out'),
+            onTap: () => Logout(context)
           ),
         ],
       ),
