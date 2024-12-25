@@ -39,7 +39,7 @@ class _LoginState extends State<Login> {
 
         // Save token securely using FlutterSecureStorage
         await storage.write(key: 'access_token', value: token);
-        print('Token saved: $token'); // For debugging
+        // print('Token saved: $token'); // For debugging
 
         // Navigate to the next page based on user type
         String userType = data['user_type'];
