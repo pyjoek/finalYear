@@ -15,6 +15,7 @@ class _TeacherPageState extends State<TeacherPage> {
   String teacherName = 'Loading...';
   String teacherEmail = 'Loading...';
   bool isLoading = true;
+  List<Map<String, dynamic>> attendanceHistory = [];
   String selectedPage = 'Teacher Details'; // Tracks the selected page
   List<Map<String, String>> studentList = [];
   List<FlSpot> attendanceGraphData = [];
@@ -173,6 +174,39 @@ Future<void> _getStudentList() async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  _getAttendanceHistory() async {
+    String? token = await storage.read(key: 'access_token');
+    if (token != null) {
+      var response = await http.get(
+        Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body)['attendance'];
+        print(data);
+
+        // Check if the response is a List and handle it accordingly
+        if (data is List) {
+          setState(() {
+            attendanceHistory = List<Map<String, dynamic>>.from(data);
+          });
+        } else {
+          // Handle unexpected response format
+          print('Error: Expected a List, but got ${data.runtimeType}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load attendance history')),
+          );
+        }
+      } else {
+        print('Error: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load attendance history')),
+        );
+      }
+    }
   }
 
   Drawer _buildDrawer() {

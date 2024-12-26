@@ -65,38 +65,62 @@ class _StudentPageState extends State<StudentPage> {
   }
 
   // Fetch attendance history from the API
-  _getAttendanceHistory() async {
-    String? token = await storage.read(key: 'access_token');
-    if (token != null) {
-      var response = await http.get(
-        Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
-        headers: {'Authorization': 'Bearer $token'},
-      );
+  // _getAttendanceHistory() async {
+  //   String? token = await storage.read(key: 'access_token');
+  //   if (token != null) {
+  //     var response = await http.get(
+  //       Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+  //       headers: {'Authorization': 'Bearer $token'},
+  //     );
 
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body)['attendance'];
-        print(data);
+  //     if (response.statusCode == 200) {
+  //       var data = jsonDecode(response.body);
+  //       setState(() {
+  //         attendanceHistory = List<Map<String, dynamic>>.from(data);
+  //       });
+  //     } else {
+  //       print('Error: ${response.statusCode}');
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Failed to load attendance history')),
+  //       );
+  //     }
+  //   }
+  // }
 
-        // Check if the response is a List and handle it accordingly
-        if (data is List) {
-          setState(() {
-            attendanceHistory = List<Map<String, dynamic>>.from(data);
-          });
-        } else {
-          // Handle unexpected response format
-          print('Error: Expected a List, but got ${data.runtimeType}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load attendance history')),
-          );
-        }
+  // Fetch attendance history from the API
+_getAttendanceHistory() async {
+  String? token = await storage.read(key: 'access_token');
+  if (token != null) {
+    var response = await http.get(
+      Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body)['attendance'];
+      print(data);
+
+      // Check if the response is a List and handle it accordingly
+      if (data is List) {
+        setState(() {
+          attendanceHistory = List<Map<String, dynamic>>.from(data);
+        });
       } else {
-        print('Error: ${response.statusCode}');
+        // Handle unexpected response format
+        print('Error: Expected a List, but got ${data.runtimeType}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load attendance history')),
         );
       }
+    } else {
+      print('Error: ${response.statusCode}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load attendance history')),
+      );
     }
   }
+}
+
 
   // Mark attendance for today
   _markAttendance() async {
@@ -173,49 +197,39 @@ class _StudentPageState extends State<StudentPage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Name: $studentName",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    "Email: $studentEmail",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    "Department: $department",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
-                  SizedBox(height: 20),
-                ],
-              ),
+      body: SingleChildScrollView(  // Wrap the entire body with SingleChildScrollView
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              "Name: $studentName",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: isAttendanceMarked ? null : _markAttendance, // Disable if attendance is marked
-              child: Text(
-                isAttendanceMarked ? 'Attendance marked for today' : 'Mark Attendance',
-              ),
+            SizedBox(height: 5),
+            Text(
+              "Email: $studentEmail",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 5),
+            Text(
+              "Department: $department",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 20),
+            // Button to mark attendance
+            ElevatedButton(
+              onPressed: isAttendanceMarked ? null : _markAttendance,  // Disable button if attendance is already marked
+              child: Text(isAttendanceMarked ? 'Attendance marked for today' : 'Mark Attendance'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
