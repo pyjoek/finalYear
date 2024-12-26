@@ -1,147 +1,236 @@
-// import 'dart:convert';
-// import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
-// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-// import 'login.dart'; // Your login page
-// import 'package:fl_chart/fl_chart.dart';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:finalyear/login.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// class StudentPage extends StatefulWidget {
-//   @override
-//   _StudentPageState createState() => _StudentPageState();
-// }
+class StudentPage extends StatefulWidget {
+  @override
+  _StudentPageState createState() => _StudentPageState();
+}
 
-// class _StudentPageState extends State<StudentPage> {
-//   final storage = FlutterSecureStorage();
-//   String studentName = '';
-//   String department = '';
+class _StudentPageState extends State<StudentPage> {
+  final storage = FlutterSecureStorage();
+  String studentName = '';
+  String studentEmail = '';
+  String department = '';
+  bool isAttendanceMarked = false;  // To track if attendance is already marked for today
+  List<Map<String, dynamic>> attendanceHistory = []; // To hold attendance data for display
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _getUserDetails();
-//   }
+  @override
+  void initState() {
+    super.initState();
+    _getUserDetails();
+    _getAttendanceHistory();  // Fetch attendance history when the page loads
+  }
 
-//   // Get user details from the API
-//   _getUserDetails() async {
-//     String? token = await storage.read(key: 'access_token');
-//     if (token != null) {
-//       var response = await http.get(
-//         Uri.parse('http://localhost:5000/protected'),
-//         headers: {'Authorization': 'Bearer $token'},
-//       );
+  // Logout function to clear both SharedPreferences and FlutterSecureStorage
+  Future<void> Logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();  // Clear saved preferences (including token)
+    await storage.delete(key: 'access_token');  // Remove token from FlutterSecureStorage
+    print('Logged out and cache cleared');
 
-//       if (response.statusCode == 200) {
-//         var data = jsonDecode(response.body);
-//         setState(() {
-//           studentName = data['email'];
-//           print(studentName);
-//           department = data['department'] ?? "Not available";
-//         });
-//       } else {
-//         print('Error: ${response.statusCode}');
-//         print(response.body);
-//       }
-//     }
-//   }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Login()),
+    );
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     double height = MediaQuery.of(context).size.height;
+  // Get user details from the API
+  _getUserDetails() async {
+    String? token = await storage.read(key: 'access_token');
+    if (token != null) {
+      var response = await http.get(
+        Uri.parse('http://127.0.0.1:5000/protected'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Colors.black,
-//         title: Text("Student Dashboard"),
-//         centerTitle: true,
-//         actions: [
-//           IconButton(
-//             icon: Icon(Icons.logout),
-//             onPressed: () async {
-//               await storage.delete(key: 'access_token');
-//               Navigator.pushReplacement(
-//                 context,
-//                 MaterialPageRoute(builder: (context) => Login()),
-//               );
-//             },
-//           )
-//         ],
-//       ),
-//       body: Padding(
-//         padding: EdgeInsets.all(16.0),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.start,
-//           crossAxisAlignment: CrossAxisAlignment.center,
-//           children: [
-//             Text(
-//               "Name: $studentName",
-//               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//             ),
-//             SizedBox(height: 5),
-//             Text(
-//               "Department: $department",
-//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-//             ),
-//             SizedBox(height: 20),
-//             // Attendance Graph
-//             Text(
-//               "Attendance (January - Now)",
-//               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//             ),
-//             SizedBox(height: 10),
-//             Container(
-//               height: height * 0.3,
-//               child: LineChart(
-//                 LineChartData(
-//                   lineBarsData: [
-//                     LineChartBarData(
-//                       spots: [
-//                         FlSpot(0, 3),  // Example data
-//                         FlSpot(1, 4),
-//                         FlSpot(2, 3),
-//                         FlSpot(3, 5),
-//                       ],
-//                       isCurved: true,
-//                       colors: [Colors.blue],
-//                       barWidth: 4,
-//                       belowBarData: BarAreaData(show: false),
-//                     ),
-//                   ],
-//                   titlesData: FlTitlesData(
-//                     leftTitles: SideTitles(showTitles: true),
-//                     bottomTitles: SideTitles(showTitles: true),
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        setState(() {
+          studentEmail = data['email'];
+          studentName = data['name']; // Fetch name
+          department = data['department'];
+        });
+      } else {
+        print('Error: ${response.statusCode}');
+        print(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load user details')),
+        );
+      }
+    }
+  }
 
-// // Login API interaction
-// Future<void> login(String email, String password, BuildContext context) async {
-//   var response = await http.post(
-//     Uri.parse('http://localhost:5000/login'),
-//     headers: {'Content-Type': 'application/json'},
-//     body: jsonEncode({'email': email, 'password': password}),
-//   );
+  // Fetch attendance history from the API
+  // _getAttendanceHistory() async {
+  //   String? token = await storage.read(key: 'access_token');
+  //   if (token != null) {
+  //     var response = await http.get(
+  //       Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+  //       headers: {'Authorization': 'Bearer $token'},
+  //     );
 
-//   if (response.statusCode == 200) {
-//     var data = jsonDecode(response.body);
-//     String token = data['access_token'];
+  //     if (response.statusCode == 200) {
+  //       var data = jsonDecode(response.body);
+  //       setState(() {
+  //         attendanceHistory = List<Map<String, dynamic>>.from(data);
+  //       });
+  //     } else {
+  //       print('Error: ${response.statusCode}');
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Failed to load attendance history')),
+  //       );
+  //     }
+  //   }
+  // }
 
-//     // Store token securely
-//     final storage = FlutterSecureStorage();
-//     await storage.write(key: 'access_token', value: token);
+  // Fetch attendance history from the API
+_getAttendanceHistory() async {
+  String? token = await storage.read(key: 'access_token');
+  if (token != null) {
+    var response = await http.get(
+      Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-//     // Navigate to the StudentPage
-//     Navigator.pushReplacement(
-//       context,
-//       MaterialPageRoute(builder: (context) => StudentPage()),
-//     );
-//   } else {
-//     print('Login failed: ${response.body}');
-//   }
-// }
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body)['attendance'];
+      print(data);
+
+      // Check if the response is a List and handle it accordingly
+      if (data is List) {
+        setState(() {
+          attendanceHistory = List<Map<String, dynamic>>.from(data);
+        });
+      } else {
+        // Handle unexpected response format
+        print('Error: Expected a List, but got ${data.runtimeType}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load attendance history')),
+        );
+      }
+    } else {
+      print('Error: ${response.statusCode}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load attendance history')),
+      );
+    }
+  }
+}
+
+
+  // Mark attendance for today
+  _markAttendance() async {
+    String? token = await storage.read(key: 'access_token');
+    if (token != null) {
+      var response = await http.post(
+        Uri.parse('http://127.0.0.1:5000/mark_attendance'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isAttendanceMarked = true;  // Mark attendance as done only after successful response
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Attendance marked for today!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to mark attendance')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Text("Student Dashboard"),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () => Logout(context),
+          )
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'Attendance History',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            // Attendance table inside the drawer
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: DataTable(
+                columns: const <DataColumn>[
+                  DataColumn(label: Text('Date')),
+                  DataColumn(label: Text('Status')),
+                ],
+                rows: attendanceHistory
+                    .map<DataRow>((attendance) => DataRow(
+                          cells: <DataCell>[
+                            DataCell(Text(attendance['date'] ?? 'N/A')),
+                            DataCell(Text(attendance['status'] == 1 ? 'Present' : 'Absent')),
+                          ],
+                        ))
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(  // Wrap the entire body with SingleChildScrollView
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              "Name: $studentName",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 5),
+            Text(
+              "Email: $studentEmail",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 5),
+            Text(
+              "Department: $department",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 20),
+            // Button to mark attendance
+            ElevatedButton(
+              onPressed: isAttendanceMarked ? null : _markAttendance,  // Disable button if attendance is already marked
+              child: Text(isAttendanceMarked ? 'Attendance marked for today' : 'Mark Attendance'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
