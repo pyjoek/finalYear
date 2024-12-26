@@ -130,6 +130,25 @@ def protected():
 
     return jsonify(message="Invalid user or token."), 404
 
+# @app.route('/attendance_history', methods=['GET'])
+# @jwt_required()
+# def attendance_history():
+#     student_id = get_jwt_identity()
+#     student = db.session.get(Student, student_id)  # Updated to use db.session.get()
+
+#     if student:
+#         # Get the student's attendance records
+#         attendance_records = Attendance.query.filter_by(student_id=student.id).all()
+#         attendance_data = []
+#         for record in attendance_records:
+#             attendance_data.append({
+#                 'date': record.date.strftime('%Y-%m-%d'),
+#                 'status': record.status
+#             })
+#         return jsonify(attendance=attendance_data), 200
+
+#     return jsonify(message="Student not found or invalid token."), 404
+
 @app.route('/attendance_history', methods=['GET'])
 @jwt_required()
 def attendance_history():
@@ -139,15 +158,21 @@ def attendance_history():
     if student:
         # Get the student's attendance records
         attendance_records = Attendance.query.filter_by(student_id=student.id).all()
+        
+        # Prepare the attendance data to send it as a list of dictionaries
         attendance_data = []
         for record in attendance_records:
+            # Convert date to the format you want for display
             attendance_data.append({
-                'date': record.date.strftime('%Y-%m-%d'),
-                'status': record.status
+                'date': record.date.strftime('%Y-%m-%d'),  # Format the date as YYYY-MM-DD
+                'status': record.status  # The status will be 'Present' or 'Absent'
             })
+        
+        # Return the attendance data in JSON format
         return jsonify(attendance=attendance_data), 200
 
     return jsonify(message="Student not found or invalid token."), 404
+
 
 @app.route('/mark_attendance', methods=['POST'])
 @jwt_required()

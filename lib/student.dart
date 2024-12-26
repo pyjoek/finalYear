@@ -4,7 +4,6 @@ import 'package:finalyear/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 class StudentPage extends StatefulWidget {
   @override
@@ -16,14 +15,14 @@ class _StudentPageState extends State<StudentPage> {
   String studentName = '';
   String studentEmail = '';
   String department = '';
-  List<FlSpot> attendanceData = [];  // To hold attendance data for the chart
   bool isAttendanceMarked = false;  // To track if attendance is already marked for today
+  List<Map<String, dynamic>> attendanceHistory = []; // To hold attendance data for display
 
   @override
   void initState() {
     super.initState();
     _getUserDetails();
-    _getAttendanceData();  // Fetch attendance data when the page loads
+    _getAttendanceHistory();  // Fetch attendance history when the page loads
   }
 
   // Logout function to clear both SharedPreferences and FlutterSecureStorage
@@ -65,26 +64,63 @@ class _StudentPageState extends State<StudentPage> {
     }
   }
 
-  // Fetch hardcoded attendance data for now
-  _getAttendanceData() async {
-    // Hardcoded data for attendance (1 for Present, 0 for Absent)
-    List<FlSpot> spots = [
-      FlSpot(1, 1),  // Present in January
-      FlSpot(2, 1),  // Present in February
-      FlSpot(3, 0),  // Absent in March
-      FlSpot(4, 1),  // Present in April
-      FlSpot(5, 1),  // Present in May
-      FlSpot(6, 0),  // Absent in June
-      FlSpot(7, 1),  // Present in July
-      FlSpot(8, 1),  // Present in August
-      FlSpot(9, 0),  // Absent in September
-      FlSpot(10, 1), // Present in October
-    ];
+  // Fetch attendance history from the API
+  // _getAttendanceHistory() async {
+  //   String? token = await storage.read(key: 'access_token');
+  //   if (token != null) {
+  //     var response = await http.get(
+  //       Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+  //       headers: {'Authorization': 'Bearer $token'},
+  //     );
 
-    setState(() {
-      attendanceData = spots;  // Set the attendance data for the chart
-    });
+  //     if (response.statusCode == 200) {
+  //       var data = jsonDecode(response.body);
+  //       setState(() {
+  //         attendanceHistory = List<Map<String, dynamic>>.from(data);
+  //       });
+  //     } else {
+  //       print('Error: ${response.statusCode}');
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Failed to load attendance history')),
+  //       );
+  //     }
+  //   }
+  // }
+
+  // Fetch attendance history from the API
+_getAttendanceHistory() async {
+  String? token = await storage.read(key: 'access_token');
+  if (token != null) {
+    var response = await http.get(
+      Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body)['attendance'];
+      print(data);
+
+      // Check if the response is a List and handle it accordingly
+      if (data is List) {
+        setState(() {
+          attendanceHistory = List<Map<String, dynamic>>.from(data);
+        });
+      } else {
+        // Handle unexpected response format
+        print('Error: Expected a List, but got ${data.runtimeType}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load attendance history')),
+        );
+      }
+    } else {
+      print('Error: ${response.statusCode}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load attendance history')),
+      );
+    }
   }
+}
+
 
   // Mark attendance for today
   _markAttendance() async {
@@ -112,8 +148,6 @@ class _StudentPageState extends State<StudentPage> {
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -125,6 +159,43 @@ class _StudentPageState extends State<StudentPage> {
             onPressed: () => Logout(context),
           )
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'Attendance History',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            // Attendance table inside the drawer
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: DataTable(
+                columns: const <DataColumn>[
+                  DataColumn(label: Text('Date')),
+                  DataColumn(label: Text('Status')),
+                ],
+                rows: attendanceHistory
+                    .map<DataRow>((attendance) => DataRow(
+                          cells: <DataCell>[
+                            DataCell(Text(attendance['date'] ?? 'N/A')),
+                            DataCell(Text(attendance['status'] == 1 ? 'Present' : 'Absent')),
+                          ],
+                        ))
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(  // Wrap the entire body with SingleChildScrollView
         padding: EdgeInsets.all(16.0),
@@ -145,32 +216,6 @@ class _StudentPageState extends State<StudentPage> {
             Text(
               "Department: $department",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            SizedBox(height: 20),
-            Text(
-              "Attendance (January - Now)",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Container(
-              height: height * 0.3,
-              child: LineChart(
-                LineChartData(
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: attendanceData.isNotEmpty ? attendanceData : [FlSpot(0, 0)],  // Use actual data or default
-                      isCurved: true,
-                      colors: [Colors.blue],
-                      barWidth: 4,
-                      belowBarData: BarAreaData(show: false),
-                    ),
-                  ],
-                  titlesData: FlTitlesData(
-                    leftTitles: SideTitles(showTitles: true),
-                    bottomTitles: SideTitles(showTitles: true),
-                  ),
-                ),
-              ),
             ),
             SizedBox(height: 20),
             // Button to mark attendance
