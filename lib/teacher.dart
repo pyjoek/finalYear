@@ -11,6 +11,7 @@ class TeacherPage extends StatefulWidget {
 }
 
 class _TeacherPageState extends State<TeacherPage> {
+  final addr = '127.0.0.1:5000';
   final storage = FlutterSecureStorage();
   String teacherName = 'Loading...';
   String teacherEmail = 'Loading...';
@@ -118,7 +119,7 @@ Future<void> _getStudentList() async {
     required String endpoint,
     required String token,
   }) async {
-    final url = Uri.parse('http://127.0.0.1:5000$endpoint');
+    final url = Uri.parse('http://$addr$endpoint');
     try {
       final response = await http.get(
         url,
@@ -154,7 +155,7 @@ Future<void> _getStudentList() async {
     String? token = await storage.read(key: 'access_token');
     if (token != null) {
       var response = await http.get(
-        Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+        Uri.parse('http://$addr/attendance_history'), // API endpoint for attendance history
         headers: {'Authorization': 'Bearer $token'},
       );
 

@@ -16,6 +16,7 @@ class _RegisterState extends State<Register> {
   final TextEditingController _nameController = TextEditingController(); // Added for name
   String? _selectedUserType;
   String? _selectedDepartment;
+  final addr = '127.0.0.1:5000';
 
   // Function to handle registration
   Future<void> _registerUser() async {
@@ -53,7 +54,7 @@ class _RegisterState extends State<Register> {
       return;
     }
 
-    final url = Uri.parse('http://127.0.0.1:5000/register'); 
+    final url = Uri.parse('http://$addr/register'); 
     try {
       final response = await http.post(
         url,

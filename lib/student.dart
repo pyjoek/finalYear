@@ -14,6 +14,7 @@ class _StudentPageState extends State<StudentPage> {
   final storage = FlutterSecureStorage();
   String studentName = '';
   String studentEmail = '';
+  final addr = '127.0.0.1:5000';
   Color baseColor = Colors.orange;
   Color bgColor = const Color.fromARGB(255, 47, 47, 47);
   Color textC = Colors.white;
@@ -46,7 +47,7 @@ class _StudentPageState extends State<StudentPage> {
     String? token = await storage.read(key: 'access_token');
     if (token != null) {
       var response = await http.get(
-        Uri.parse('http://127.0.0.1:5000/protected'),
+        Uri.parse('http://$addr/protected'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -72,7 +73,7 @@ class _StudentPageState extends State<StudentPage> {
     String? token = await storage.read(key: 'access_token');
     if (token != null) {
       var response = await http.get(
-        Uri.parse('http://127.0.0.1:5000/attendance_history'), // API endpoint for attendance history
+        Uri.parse('http://$addr/attendance_history'), // API endpoint for attendance history
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -106,7 +107,7 @@ class _StudentPageState extends State<StudentPage> {
     String? token = await storage.read(key: 'access_token');
     if (token != null) {
       var response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/mark_attendance'),
+        Uri.parse('http://$addr/mark_attendance'),
         headers: {'Authorization': 'Bearer $token'},
       );
 

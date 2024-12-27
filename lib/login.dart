@@ -13,6 +13,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final FlutterSecureStorage storage = FlutterSecureStorage();  // Correctly initializing FlutterSecureStorage
   late double height, width;
+  final addr = '127.0.0.1:5000';
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -25,7 +26,7 @@ class _LoginState extends State<Login> {
   Future<void> login() async {
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/login'),  // Replace with your Flask backend URL
+        Uri.parse('http://$addr/login'),  // Replace with your Flask backend URL
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': _emailController.text,
