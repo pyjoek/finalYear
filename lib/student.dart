@@ -14,6 +14,9 @@ class _StudentPageState extends State<StudentPage> {
   final storage = FlutterSecureStorage();
   String studentName = '';
   String studentEmail = '';
+  Color baseColor = Colors.orange;
+  Color bgColor = const Color.fromARGB(255, 47, 47, 47);
+  Color textC = Colors.white;
   String department = '';
   bool isAttendanceMarked = false;  // To track if attendance is already marked for today
   List<Map<String, dynamic>> attendanceHistory = []; // To hold attendance data for display
@@ -125,9 +128,13 @@ class _StudentPageState extends State<StudentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text("Student Dashboard"),
+        backgroundColor: baseColor,
+        title: Text("Student Dashboard",style: TextStyle(
+                  color: textC,
+                  fontSize: 24,
+                ),),
         centerTitle: true,
         actions: [
           IconButton(
@@ -142,12 +149,12 @@ class _StudentPageState extends State<StudentPage> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: baseColor,
               ),
               child: Text(
                 'Attendance History',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: textC,
                   fontSize: 24,
                 ),
               ),
@@ -164,7 +171,7 @@ class _StudentPageState extends State<StudentPage> {
                     .map<DataRow>((attendance) => DataRow(
                           cells: <DataCell>[
                             DataCell(Text(attendance['date'] ?? 'N/A')),
-                            DataCell(Text(attendance['status'] == 1 ? 'Present' : 'Absent')),
+                            DataCell(Text(attendance['status'] == 'Present' ? 'Present' : 'Absent')),
                           ],
                         ))
                     .toList(),
@@ -183,18 +190,18 @@ class _StudentPageState extends State<StudentPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    "Name: $studentName",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    "$studentName",
+                    style: TextStyle(fontSize: 24, color: textC ,fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 5),
                   Text(
-                    "Email: $studentEmail",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                    "$studentEmail",
+                    style: TextStyle(fontSize: 15, color: textC ,fontWeight: FontWeight.w100),
                   ),
                   SizedBox(height: 5),
                   Text(
-                    "Department: $department",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                    "$department",
+                    style: TextStyle(fontSize: 18, color: textC ,fontWeight: FontWeight.w300),
                   ),
                   SizedBox(height: 20),
                 ],
@@ -209,9 +216,9 @@ class _StudentPageState extends State<StudentPage> {
                 isAttendanceMarked ? 'Attendance marked for today' : 'Mark Attendance',
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: baseColor,
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textStyle: TextStyle(fontSize: 16, color: textC ,fontWeight: FontWeight.bold),
               ),
             ),
           ),
