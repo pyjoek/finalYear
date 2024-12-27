@@ -17,7 +17,7 @@ class _TeacherPageState extends State<TeacherPage> {
   bool isLoading = true;
   List<Map<String, dynamic>> attendanceHistory = [];
   String selectedPage = 'Teacher Details'; // Tracks the selected page
-  List<Map<String, String>> studentList = [];
+  List<Map<dynamic, dynamic>> studentList = [];
   List<FlSpot> attendanceGraphData = [];
 
   @override
@@ -31,13 +31,30 @@ class _TeacherPageState extends State<TeacherPage> {
     try {
       await _getTeacherDetails();
       await _getStudentList();
-      await _getAttendanceData();
+      // await _getAttendanceData();
     } catch (e) {
-      _showError('Failed to fetch data. Please try again later.');
+      _showError('Failed to fetch data. Please try again later.$e');
     } finally {
       setState(() => isLoading = false);
     }
   }
+
+Future<void> _getStudentList() async {
+  String? token = await storage.read(key: 'access_token');
+  if (token != null) {
+    final response = await _makeApiCall(
+      endpoint: '/teacher/students',
+      token: token,
+    );
+    if (response != null) {
+      setState(() {
+        studentList = List<Map<dynamic, dynamic>>.from(response['students']);
+      });
+    }
+  } else {
+    _showError("Failed to fetch students. Invalid or missing token.");
+  }
+}
 
 
   // Logout function to clear both SharedPreferences and FlutterSecureStorage
@@ -69,53 +86,10 @@ class _TeacherPageState extends State<TeacherPage> {
     }
   }
 
-  // Future<void> _getStudentList() async {
-  //   String? token = await storage.read(key: 'access_token');
-  //   if (token != null) {
-  //     final response = await _makeApiCall(
-  //       endpoint: '/teacher/students',
-  //       token: token,
-  //     );
-  //     if (response != null) {
-  //       setState(() {
-  //         studentList = List<Map<String, String>>.from(response['students']);
-  //       });
-  //       print("hello");
-  //     }
-  //   }
-  // }
-
   void _showErrorMessage(String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(content: Text(message)),
   );
-}
-
-Future<void> _getStudentList() async {
-  try {
-    String? token = await storage.read(key: 'access_token');
-    if (token == null) {
-      throw Exception("Access token not found. Please log in.");
-    }
-
-    final response = await _makeApiCall(
-      endpoint: '/teacher/students',
-      token: token,
-    );
-
-    if (response != null && response['students'] != null) {
-      setState(() {
-        studentList = List<Map<String, String>>.from(
-          response['students'].map((student) => student.map((key, value) => MapEntry(key, value.toString())))
-        );
-      });
-    } else {
-      throw Exception("Invalid response from the server.");
-    }
-  } catch (error) {
-    print("Error fetching student list: $error");
-    _showErrorMessage("Failed to load student list. Please try again.");
-  }
 }
 
   Future<void> _getAttendanceData() async {
