@@ -80,3 +80,9 @@ You need to set the following environment variables for secure operations:
 Set up the database schema by running the following command in the Flask app folder:
 ```bash
 flask db upgrade
+
+### For Docker 
+you can follow this steps
+- docker-compose up --build
+    - access frontEnd by [http://localhost:8080]
+    - access backEnd by [http://localhost:8000]

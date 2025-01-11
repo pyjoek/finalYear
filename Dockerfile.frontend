@@ -1,0 +1,28 @@
+# Use Node.js as the base image for serving the Flutter app
+FROM node:18-alpine as build
+
+# Set working directory
+WORKDIR /app
+
+# Install Git and Flutter
+RUN apk add --no-cache git curl wget bash unzip && \
+    wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.13.8-stable.tar.xz && \
+    tar -xf flutter_linux_3.13.8-stable.tar.xz && \
+    mv flutter /usr/local/flutter && \
+    rm flutter_linux_3.13.8-stable.tar.xz && \
+    /usr/local/flutter/bin/flutter doctor
+
+# Add Flutter to PATH
+ENV PATH="/usr/local/flutter/bin:$PATH"
+
+# Clone the repository
+RUN git clone https://github.com/pyjoek/finalYear.git /app
+
+# Build the Flutter web app
+RUN flutter build web --release
+
+# Use Nginx for serving the web app
+FROM nginx:1.23-alpine
+COPY --from=build /app/build/web /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
