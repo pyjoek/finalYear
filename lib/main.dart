@@ -27,7 +27,6 @@ class MyHomeState extends State<MyHome> {
     return Scaffold(
       body: Column(
         children: [
-          // Column for centering "Zanzibar University" and the logo
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,  // Center content vertically

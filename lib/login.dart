@@ -17,16 +17,10 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Future<void> clearCache() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   await prefs.clear(); // Clears all stored preferences
-  //   print('Cache cleared');
-  // }
-
   Future<void> login() async {
     try {
       final response = await http.post(
-        Uri.parse('http://$addr/login'),  // Replace with your Flask backend URL
+        Uri.parse('http://$addr/login'), 
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': _emailController.text,

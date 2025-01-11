@@ -57,7 +57,6 @@ Future<void> _getStudentList() async {
   }
 }
 
-
   // Logout function to clear both SharedPreferences and FlutterSecureStorage
   Future<void> Logout(BuildContext context) async {
     // SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -77,8 +76,7 @@ Future<void> _getStudentList() async {
       final response = await _makeApiCall(
         endpoint: '/teacher/details',
         token: token,
-      );
-      if (response != null) {
+      );      if (response != null) {
         setState(() {
           teacherName = response['name'];
           teacherEmail = response['email'];
