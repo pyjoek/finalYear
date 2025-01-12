@@ -85,7 +85,6 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
 
-    ssid = request.json.get('ssid')
     email = request.json.get('email', None)
     password = request.json.get('password', None)
 
@@ -99,9 +98,6 @@ def login():
         ), 200
 
     student = Student.query.filter_by(email=email).first()
-
-    if ssid != "joel_wifi":
-        return {"message": "Unauthorized Wi-Fi"}, 403
     
     if student and student.password == password:  # Direct password comparison
         access_token = create_access_token(identity=student.id)
