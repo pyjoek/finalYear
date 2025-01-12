@@ -1,3 +1,4 @@
-flask
-flask_sqlalchemy
-flask_jwt_extended
+Flask==2.2.3
+Flask-SQLAlchemy==3.0.0
+Flask-JWT-Extended==4.4.4
+PyMySQL==1.0.3
