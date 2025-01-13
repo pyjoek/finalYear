@@ -102,6 +102,46 @@ class _StudentPageState extends State<StudentPage> {
     }
   }
 
+  // Drawer with attendance history
+  Drawer _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: baseColor,
+            ),
+            child: Text(
+              'Attendance History',
+              style: TextStyle(
+                color: textC,
+                fontSize: 24,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: DataTable(
+              columns: const <DataColumn>[
+                DataColumn(label: Text('Date')),
+                DataColumn(label: Text('Status')),
+              ],
+              rows: attendanceHistory
+                  .map<DataRow>((attendance) => DataRow(
+                        cells: <DataCell>[
+                          DataCell(Text(attendance['date'] ?? 'N/A')),
+                          DataCell(Text(attendance['status'] == 'Present' ? 'Present' : 'Absent')),
+                        ],
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Mark attendance for today
   _markAttendance() async {
     String? token = await storage.read(key: 'access_token');
@@ -132,10 +172,7 @@ class _StudentPageState extends State<StudentPage> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: baseColor,
-        title: Text("Student Dashboard",style: TextStyle(
-                  color: textC,
-                  fontSize: 24,
-                ),),
+        title: Text("Student Dashboard", style: TextStyle(color: textC, fontSize: 24)),
         centerTitle: true,
         actions: [
           IconButton(
@@ -144,43 +181,7 @@ class _StudentPageState extends State<StudentPage> {
           )
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: baseColor,
-              ),
-              child: Text(
-                'Attendance History',
-                style: TextStyle(
-                  color: textC,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            // Attendance table inside the drawer
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: DataTable(
-                columns: const <DataColumn>[
-                  DataColumn(label: Text('Date')),
-                  DataColumn(label: Text('Status')),
-                ],
-                rows: attendanceHistory
-                    .map<DataRow>((attendance) => DataRow(
-                          cells: <DataCell>[
-                            DataCell(Text(attendance['date'] ?? 'N/A')),
-                            DataCell(Text(attendance['status'] == 'Present' ? 'Present' : 'Absent')),
-                          ],
-                        ))
-                    .toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
+      drawer: _buildDrawer(), // Drawer with attendance data
       body: Column(
         children: [
           Expanded(
@@ -192,17 +193,17 @@ class _StudentPageState extends State<StudentPage> {
                 children: [
                   Text(
                     "$studentName",
-                    style: TextStyle(fontSize: 24, color: textC ,fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 24, color: textC, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 5),
                   Text(
                     "$studentEmail",
-                    style: TextStyle(fontSize: 15, color: textC ,fontWeight: FontWeight.w100),
+                    style: TextStyle(fontSize: 15, color: textC, fontWeight: FontWeight.w100),
                   ),
                   SizedBox(height: 5),
                   Text(
                     "$department",
-                    style: TextStyle(fontSize: 18, color: textC ,fontWeight: FontWeight.w300),
+                    style: TextStyle(fontSize: 18, color: textC, fontWeight: FontWeight.w300),
                   ),
                   SizedBox(height: 20),
                 ],
@@ -219,7 +220,7 @@ class _StudentPageState extends State<StudentPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: baseColor,
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                textStyle: TextStyle(fontSize: 16, color: textC ,fontWeight: FontWeight.bold),
+                textStyle: TextStyle(fontSize: 16, color: textC, fontWeight: FontWeight.bold),
               ),
             ),
           ),

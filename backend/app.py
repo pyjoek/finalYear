@@ -246,6 +246,40 @@ def list_students():
 
     return jsonify(students=student_list), 200
 
+@app.route('/attendance_dates', methods=['GET'])
+@jwt_required()
+def attendance_dates():
+    teacher_id = get_jwt_identity()
+    # Ensure the logged-in user is a teacher
+    teacher = db.session.get(Teacher, teacher_id)
+    if not teacher:
+        return jsonify(message="Teacher not found."), 404
+    
+    # Get all unique attendance dates from the Attendance table
+    attendance_dates = db.session.query(Attendance.date).distinct().all()
+    # Extract only the date part from the query results
+    dates = [str(date[0]) for date in attendance_dates]
+    return jsonify(dates=dates), 200
+
+@app.route('/attendance_details', methods=['GET'])
+@jwt_required()
+def attendance_details():
+    date = request.args.get('date')  # Get the date from the query parameters
+    if not date:
+        return jsonify(message="Date is required."), 400
+    
+    # Convert the string date to a datetime object
+    try:
+        date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify(message="Invalid date format, should be YYYY-MM-DD."), 400
+
+    # Fetch all students who attended on this date
+    attendance_records = db.session.query(Student.name, Student.email).join(Attendance).filter(Attendance.date == date_obj, Attendance.status == 'Present').all()
+    
+    students = [{"name": student[0], "email": student[1]} for student in attendance_records]
+    return jsonify(students=students), 200
+
 
 @app.route('/logout', methods=['POST'])
 @jwt_required()
