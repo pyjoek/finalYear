@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'login.dart';
-import 'package:fl_chart/fl_chart.dart'; // For graph rendering
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class TeacherPage extends StatefulWidget {
   @override
@@ -11,256 +9,230 @@ class TeacherPage extends StatefulWidget {
 }
 
 class _TeacherPageState extends State<TeacherPage> {
-  final addr = '127.0.0.1:5000';
   final storage = FlutterSecureStorage();
-  String teacherName = 'Loading...';
-  String teacherEmail = 'Loading...';
+  List<dynamic> students = [];
+  List<String> attendanceDates = [];
   bool isLoading = true;
-  List<Map<String, dynamic>> attendanceHistory = [];
-  String selectedPage = 'Teacher Details'; // Tracks the selected page
-  List<Map<dynamic, dynamic>> studentList = [];
-  List<FlSpot> attendanceGraphData = [];
+  String currentPage = "Students"; // To track the current page
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _loadStudentList();
+    _loadAttendanceDates();
   }
 
-  Future<void> _fetchData() async {
-    setState(() => isLoading = true);
-    try {
-      await _getTeacherDetails();
-      await _getStudentList();
-      // await _getAttendanceData();
-    } catch (e) {
-      _showError('Failed to fetch data. Please try again later.$e');
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-Future<void> _getStudentList() async {
-  String? token = await storage.read(key: 'access_token');
-  if (token != null) {
-    final response = await _makeApiCall(
-      endpoint: '/teacher/students',
-      token: token,
+  // Load the list of students from the backend
+  Future<void> _loadStudentList() async {
+    final token = await storage.read(key: 'access_token');
+    final response = await http.get(
+      Uri.parse('http://localhost:5000/teacher/students'),
+      headers: {'Authorization': 'Bearer $token'},
     );
-    if (response != null) {
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body)['students'];
       setState(() {
-        studentList = List<Map<dynamic, dynamic>>.from(response['students']);
+        students = data;
+        isLoading = false;
+      });
+    } else {
+      // Handle the error appropriately
+      setState(() {
+        isLoading = false;
       });
     }
-  } else {
-    _showError("Failed to fetch students. Invalid or missing token.");
   }
-}
 
-  // Logout function to clear both SharedPreferences and FlutterSecureStorage
-  Future<void> Logout(BuildContext context) async {
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // await prefs.clear();  // Clear saved preferences (including token)
-    await storage.delete(key: 'access_token');  // Remove token from FlutterSecureStorage
-    print('Logged out and cache cleared');
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => Login()),
+  // Load the list of attendance dates from the backend
+  Future<void> _loadAttendanceDates() async {
+    final token = await storage.read(key: 'access_token');
+    final response = await http.get(
+      Uri.parse('http://localhost:5000/attendance_dates'),
+      headers: {'Authorization': 'Bearer $token'},
     );
-  }
 
-  Future<void> _getTeacherDetails() async {
-    String? token = await storage.read(key: 'access_token');
-    if (token != null) {
-      final response = await _makeApiCall(
-        endpoint: '/teacher/details',
-        token: token,
-      );      if (response != null) {
-        setState(() {
-          teacherName = response['name'];
-          teacherEmail = response['email'];
-        });
-      }
+    if (response.statusCode == 200) {
+      final List<String> dates = List<String>.from(json.decode(response.body)['dates']);
+      setState(() {
+        attendanceDates = dates;
+      });
     }
   }
 
-  void _showErrorMessage(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message)),
-  );
-}
+  // Show student details for a selected attendance date
+  Future<void> _showAttendanceDetails(String date) async {
+    final token = await storage.read(key: 'access_token');
+    final response = await http.get(
+      Uri.parse('http://localhost:5000/attendance_details?date=$date'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-  Future<void> _getAttendanceData() async {
-    String? token = await storage.read(key: 'access_token');
-    if (token != null) {
-      final response = await _makeApiCall(
-        endpoint: '/teacher/attendance/data',
-        token: token,
-      );
-      if (response != null) {
-        setState(() {
-          attendanceGraphData = List<FlSpot>.from(
-            response['attendance'].map(
-              (point) => FlSpot(
-                point['day'].toDouble(),
-                point['percentage'].toDouble(),
-              ),
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body)['students'];
+      // Show the student list who attended on that day
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Attendance for $date'),
+            content: Column(
+              children: data
+                  .map<Widget>((student) => Text('${student['name']} (${student['email']})'))
+                  .toList(),
             ),
-          );
-        });
-      }
-    }
-  }
-
-  Future<Map<String, dynamic>?> _makeApiCall({
-    required String endpoint,
-    required String token,
-  }) async {
-    final url = Uri.parse('http://$addr$endpoint');
-    try {
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else if (response.statusCode == 401) {
-        _redirectToLogin();
-      } else {
-        _showError('Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      _showError('Failed to connect to the server.');
-    }
-    return null;
-  }
-
-  void _redirectToLogin() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => Login()),
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
-  _getAttendanceHistory() async {
-    String? token = await storage.read(key: 'access_token');
-    if (token != null) {
-      var response = await http.get(
-        Uri.parse('http://$addr/attendance_history'), // API endpoint for attendance history
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body)['attendance'];
-        print(data);
-
-        // Check if the response is a List and handle it accordingly
-        if (data is List) {
-          setState(() {
-            attendanceHistory = List<Map<String, dynamic>>.from(data);
-          });
-        } else {
-          // Handle unexpected response format
-          print('Error: Expected a List, but got ${data.runtimeType}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load attendance history')),
-          );
-        }
-      } else {
-        print('Error: ${response.statusCode}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load attendance history')),
-        );
-      }
-    }
-  }
-
-  Drawer _buildDrawer() {
-    return Drawer(
-      child: ListView(
-        children: [
-          DrawerHeader(
-            child: Text('Teacher Dashboard', style: TextStyle(color: Colors.white)),
-            decoration: BoxDecoration(color: Colors.black),
-          ),
-          ListTile(
-            title: Text('Teacher Details'),
-            onTap: () => setState(() => selectedPage = 'Teacher Details'),
-          ),
-          ListTile(
-            title: Text('Student List'),
-            onTap: () => setState(() => selectedPage = 'Student List'),
-          ),
-          ListTile(
-            title: Text('Student Graph'),
-            onTap: () => setState(() => selectedPage = 'Student Graph'),
-          ),
-          ListTile(
-            title: Text('Log out'),
-            onTap: () => Logout(context)
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTeacherDetailsPage() => Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Name: $teacherName"),
-            Text("Email: $teacherEmail"),
-          ],
-        ),
-      );
-
-  Widget _buildStudentListPage() => studentList.isEmpty
-      ? Center(child: Text('No students found.'))
-      : ListView.builder(
-          itemCount: studentList.length,
-          itemBuilder: (context, index) {
-            var student = studentList[index];
-            return ListTile(
-              title: Text(student['name'] ?? 'Unknown'),
-              subtitle: Text(student['email'] ?? 'No email'),
-            );
-          },
-        );
-
-  Widget _buildStudentGraphPage() => attendanceGraphData.isEmpty
-      ? Center(child: Text('No attendance data available.'))
-      : LineChart(
-          LineChartData(
-            lineBarsData: [
-              LineChartBarData(
-                spots: attendanceGraphData,
-                isCurved: true,
-                colors: [Colors.blue],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Close'),
               ),
             ],
+          );
+        },
+      );
+    }
+  }
+
+  // Update the current page based on Drawer selection
+  void _updatePage(String page) {
+    setState(() {
+      currentPage = page;
+    });
+  }
+
+  // Widget to display the student list
+  Widget _buildStudentList() {
+    return ListView.builder(
+      itemCount: students.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(students[index]['name']),
+          subtitle: Text(students[index]['email']),
+        );
+      },
+    );
+  }
+
+  // Widget to display attendance dates
+  Widget _buildAttendanceDates() {
+    return ListView.builder(
+      itemCount: attendanceDates.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(attendanceDates[index]),
+          trailing: IconButton(
+            icon: Icon(Icons.info),
+            onPressed: () {
+              _showAttendanceDetails(attendanceDates[index]);
+            },
           ),
         );
+      },
+    );
+  }
+
+  // Logout function
+  Future<void> _logout() async {
+    await storage.delete(key: 'access_token');  // Delete token to log out
+    Navigator.pushReplacementNamed(context, '/login');  // Redirect to login screen
+  }
+
+  // Fetch teacher details (name and email)
+  Future<Map<String, String>> _fetchTeacherDetails() async {
+    final token = await storage.read(key: 'access_token');
+    final response = await http.get(
+      Uri.parse('http://localhost:5000/teacher/details'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return {
+        'name': data['name'],
+        'email': data['email'],
+      };
+    } else {
+      return {'name': 'Unknown', 'email': 'Unknown'};
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Teacher Dashboard")),
-      drawer: _buildDrawer(),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : selectedPage == 'Teacher Details'
-              ? _buildTeacherDetailsPage()
-              : selectedPage == 'Student List'
-                  ? _buildStudentListPage()
-                  : _buildStudentGraphPage(),
+      appBar: AppBar(
+        title: Text('Teacher Dashboard'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: FutureBuilder<Map<String, String>>(
+                future: _fetchTeacherDetails(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error loading teacher details');
+                  } else {
+                    final teacher = snapshot.data;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          teacher?['name'] ?? 'Teacher Name',
+                          style: TextStyle(color: Colors.white, fontSize: 24),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          teacher?['email'] ?? 'teacher@example.com',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                      ],
+                    );
+                  }
+                },
+              ),
+            ),
+            ListTile(
+              title: Text('Students'),
+              onTap: () {
+                _updatePage("Students");
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Attendance'),
+              onTap: () {
+                _updatePage("Attendance");
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Logout'),
+              onTap: () {
+                _logout();
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Expanded(
+                    child: currentPage == "Students"
+                        ? _buildStudentList()
+                        : _buildAttendanceDates(),
+                  ),
+          ],
+        ),
+      ),
     );
   }
 }
