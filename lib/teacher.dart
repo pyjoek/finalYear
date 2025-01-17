@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:finalyear/login.dart';
 import 'dart:convert';
 
 class TeacherPage extends StatefulWidget {
@@ -137,6 +138,16 @@ class _TeacherPageState extends State<TeacherPage> {
     Navigator.pushReplacementNamed(context, '/login');  // Redirect to login screen
   }
 
+  Future<void> Logout(BuildContext context) async {
+    await storage.delete(key: 'access_token');  // Remove token from FlutterSecureStorage
+    print('Logged out and cache cleared');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Login()),
+    );
+  }
+
   // Fetch teacher details (name and email)
   Future<Map<String, String>> _fetchTeacherDetails() async {
     final token = await storage.read(key: 'access_token');
@@ -180,14 +191,19 @@ class _TeacherPageState extends State<TeacherPage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          teacher?['name'] ?? 'Teacher Name',
-                          style: TextStyle(color: Colors.white, fontSize: 24),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          teacher?['email'] ?? 'teacher@example.com',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        Center(
+                          child: Column(children: [
+                            Text(
+                              teacher?['name'] ?? 'Teacher Name',
+                              style: TextStyle(color: Colors.white, fontSize: 26),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              teacher?['email'] ?? 'teacher@example.com',
+                              style: TextStyle(color: Colors.white, fontSize: 15),
+                            ),
+                          ],),
+                          
                         ),
                       ],
                     );
@@ -212,7 +228,7 @@ class _TeacherPageState extends State<TeacherPage> {
             ListTile(
               title: Text('Logout'),
               onTap: () {
-                _logout();
+                Logout(context);
               },
             ),
           ],
