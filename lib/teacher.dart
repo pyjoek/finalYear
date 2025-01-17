@@ -106,9 +106,31 @@ class _TeacherPageState extends State<TeacherPage> {
     return ListView.builder(
       itemCount: students.length,
       itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(students[index]['name']),
-          subtitle: Text(students[index]['email']),
+        return Column(
+          children: [
+            Container(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15),
+                    child: Row(
+                      children: [
+                        Text((students[index]['name']).toUpperCase(), 
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                        SizedBox(width: 20,),
+                        Text(students[index]['email']),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(24)
+                )
+            ),
+        SizedBox(height: 10,)
+          ],
         );
       },
     );
@@ -194,8 +216,9 @@ class _TeacherPageState extends State<TeacherPage> {
                         Center(
                           child: Column(children: [
                             Text(
-                              teacher?['name'] ?? 'Teacher Name',
-                              style: TextStyle(color: Colors.white, fontSize: 26),
+                              (teacher?['name'] ?? 'Teacher Name').toUpperCase(),
+                              style: TextStyle(color: Colors.white, fontSize: 26
+                              , fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 10),
                             Text(

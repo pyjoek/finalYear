@@ -27,11 +27,12 @@ class MyHome extends StatefulWidget {
 
 class MyHomeState extends State<MyHome> {
   String? ssid = 'Unknown'; // Holds the Wi-Fi SSID or "Unknown"
+  
 
   @override
   void initState() {
     super.initState();
-    fetchWifiSSID(); // Fetch the SSID when the app initializes
+    fetchWifiSSID();
   }
 
   // Fetch Wi-Fi SSID based on platform
@@ -56,30 +57,6 @@ class MyHomeState extends State<MyHome> {
       setState(() {
         ssid = 'Error Fetching SSID';
       });
-    }
-  }
-
-  // Send SSID to backend
-  Future<void> sendSSIDToBackend() async {
-    if (ssid == null || ssid == 'Unknown' || ssid == 'Not Supported on this Platform') {
-      print("SSID not available or unsupported on this platform.");
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/validate_ssid'), // Replace with your backend URL
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'ssid': ssid}),
-      );
-
-      if (response.statusCode == 200) {
-        print('SSID validation successful: ${response.body}');
-      } else {
-        print('SSID validation failed: ${response.body}');
-      }
-    } catch (e) {
-      print('Error sending SSID to backend: $e');
     }
   }
 
@@ -134,7 +111,6 @@ class MyHomeState extends State<MyHome> {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
-                    sendSSIDToBackend(); // Send SSID to backend on login
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
