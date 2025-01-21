@@ -168,6 +168,7 @@ class _StudentPageState extends State<StudentPage> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
@@ -191,21 +192,28 @@ class _StudentPageState extends State<StudentPage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  SizedBox(height: 30,),
+                  CircleAvatar(
+                    child: Text(studentName[0].toUpperCase(),
+                    style: TextStyle(fontSize: 70),
+                    ),
+                    radius: 50,
+                  ),
+                  SizedBox(height: 10,),
                   Text(
                     "$studentName",
-                    style: TextStyle(fontSize: 24, color: textC, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 28, color: textC, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 5),
+                  SizedBox(height: 10),
                   Text(
                     "$studentEmail",
                     style: TextStyle(fontSize: 15, color: textC, fontWeight: FontWeight.w100),
                   ),
-                  SizedBox(height: 5),
+                  SizedBox(height: 10),
                   Text(
                     "$department",
                     style: TextStyle(fontSize: 18, color: textC, fontWeight: FontWeight.w300),
                   ),
-                  SizedBox(height: 20),
                 ],
               ),
             ),

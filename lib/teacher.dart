@@ -109,24 +109,28 @@ class _TeacherPageState extends State<TeacherPage> {
         return Column(
           children: [
             Container(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 15),
-                    child: Row(
-                      children: [
-                        Text((students[index]['name']).toUpperCase(), 
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
-                        SizedBox(width: 20,),
-                        Text(students[index]['email']),
-                      ],
-                    ),
-                  )
-                ],
+              width: MediaQuery.of(context).size.width * 0.6,
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  children: [
+                    Text((students[index]['name']).toUpperCase(), 
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                    Text(students[index]['email']),
+                  ],
+                ),
               ),
                 decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(24)
+                  borderRadius: BorderRadius.circular(24),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black,
+                      blurRadius: 3,
+                      spreadRadius: 0,
+                      offset: Offset(0, 3)
+                    )
+                  ]
                 )
             ),
         SizedBox(height: 10,)

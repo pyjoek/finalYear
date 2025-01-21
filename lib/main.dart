@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:finalyear/register.dart';
 import 'package:finalyear/login.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'dart:io' show Platform; // For platform checks
 import 'package:network_info_plus/network_info_plus.dart'; // Supports multiple platforms
 
