@@ -4,14 +4,14 @@ import 'package:finalyear/login.dart';
 import 'dart:io' show Platform; // For platform checks
 import 'package:network_info_plus/network_info_plus.dart'; // Supports multiple platforms
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MyHome(),
     );
@@ -19,6 +19,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHome extends StatefulWidget {
+  const MyHome({super.key});
+
   @override
   MyHomeState createState() => MyHomeState();
 }
@@ -67,8 +69,8 @@ class MyHomeState extends State<MyHome> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 20.0),
                   child: Text(
                     'Zanzibar University',
                     style: TextStyle(
@@ -95,7 +97,7 @@ class MyHomeState extends State<MyHome> {
                   padding: const EdgeInsets.only(bottom: 20.0),
                   child: Text(
                     'Connected Wi-Fi: $ssid',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ),
               ],
@@ -111,12 +113,12 @@ class MyHomeState extends State<MyHome> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     "Login",
                     style: TextStyle(fontSize: 18),
                   ),
@@ -126,12 +128,12 @@ class MyHomeState extends State<MyHome> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => Register()));
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     "Register",
                     style: TextStyle(fontSize: 18),
                   ),
