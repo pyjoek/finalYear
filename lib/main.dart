@@ -27,6 +27,7 @@ class MyHome extends StatefulWidget {
 
 class MyHomeState extends State<MyHome> {
   String? ssid = 'Unknown'; // Holds the Wi-Fi SSID or "Unknown"
+  final String allowedSSID = "ENG_NET";
   
 
   @override
@@ -110,7 +111,23 @@ class MyHomeState extends State<MyHome> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+                    if (ssid == allowedSSID) {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Access Denied"),
+                          content: const Text("Please connect to the Required Wi-Fi to proceed."),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -123,9 +140,41 @@ class MyHomeState extends State<MyHome> {
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
+
+                // ElevatedButton(
+                //   onPressed: () {
+                //     Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+                //   },
+                //   style: ElevatedButton.styleFrom(
+                //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius: BorderRadius.circular(10),
+                //     ),
+                //   ),
+                //   child: const Text(
+                //     "Login",
+                //     style: TextStyle(fontSize: 18),
+                //   ),
+                // ),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => Register()));
+                    if (ssid == allowedSSID) {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => Register()));
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Access Denied"),
+                          content: const Text("Please connect to the Required Wi-Fi to proceed."),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
