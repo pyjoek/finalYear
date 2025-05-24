@@ -28,7 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  fl_chart: ^0.40.0
+  fl_chart: ^1.0.0
   qr_code_scanner: ^0.7.0
   local_auth: ^2.1.0
   flutter_barcode_scanner: ^2.0.0
