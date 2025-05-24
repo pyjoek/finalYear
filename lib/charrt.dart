@@ -33,7 +33,7 @@ class MyPieChart extends StatelessWidget {
           ),
         ],
         sectionsSpace: 0,
-        centerSpaceRadius: 90,
+        centerSpaceRadius: 100,
       ),
     );
   }
