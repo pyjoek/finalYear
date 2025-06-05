@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:local_auth/local_auth.dart';
-import 'package:finalyear/student.dart';
-import 'package:finalyear/teacher.dart';
+import 'package:finalyear/student.dart'; // Ensure this file exists
+import 'package:finalyear/teacher.dart'; // Ensure this file exists
 
 class Login extends StatefulWidget {
   @override
@@ -12,10 +11,8 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final FlutterSecureStorage storage = FlutterSecureStorage();
-  final LocalAuthentication auth = LocalAuthentication();
+  final FlutterSecureStorage storage = FlutterSecureStorage();  // Correctly initializing FlutterSecureStorage
   late double height, width;
-
   final addr = '127.0.0.1:5000';
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -23,7 +20,7 @@ class _LoginState extends State<Login> {
   Future<void> login() async {
     try {
       final response = await http.post(
-        Uri.parse('http://$addr/login'),
+        Uri.parse('http://$addr/login'), 
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': _emailController.text,
@@ -34,12 +31,24 @@ class _LoginState extends State<Login> {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         String token = data['access_token'];
-        String userType = data['user_type'];
 
+        // Save token securely using FlutterSecureStorage
         await storage.write(key: 'access_token', value: token);
-        await storage.write(key: 'user_type', value: userType);
+        // print('Token saved: $token'); // For debugging
 
-        _navigateToUserPage(userType);
+        // Navigate to the next page based on user type
+        String userType = data['user_type'];
+        if (userType == 'Student') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => StudentPage()),
+          );
+        } else if (userType == 'Teacher') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => TeacherPage()),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Invalid credentials')),
@@ -48,59 +57,6 @@ class _LoginState extends State<Login> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
-      );
-    }
-  }
-
-  Future<void> biometricLogin() async {
-    bool canAuthenticate = await auth.canCheckBiometrics || await auth.isDeviceSupported();
-    if (!canAuthenticate) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Biometric authentication not available")),
-      );
-      return;
-    }
-
-    bool authenticated = false;
-    try {
-      authenticated = await auth.authenticate(
-        localizedReason: 'Scan your biometrics to login',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Authentication failed: $e')),
-      );
-      return;
-    }
-
-    if (authenticated) {
-      String? token = await storage.read(key: 'access_token');
-      String? userType = await storage.read(key: 'user_type');
-
-      if (token != null && userType != null) {
-        _navigateToUserPage(userType);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No previous login found')),
-        );
-      }
-    }
-  }
-
-  void _navigateToUserPage(String userType) {
-    if (userType == 'Student') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => StudentPage()),
-      );
-    } else if (userType == 'Teacher') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => TeacherPage()),
       );
     }
   }
@@ -193,17 +149,9 @@ class _LoginState extends State<Login> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text("Login", style: TextStyle(fontSize: 18)),
-                    ),
-                    SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: biometricLogin,
-                      icon: Icon(Icons.fingerprint, size: 20),
-                      label: Text("Login with Biometrics"),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                      child: Text(
+                        "Login",
+                        style: TextStyle(fontSize: 18),
                       ),
                     ),
                   ],
