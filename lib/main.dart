@@ -86,7 +86,7 @@ class MyHomeState extends State<MyHome> {
                   child: Center(
                     child: SizedBox(
                       width: 250,
-                      height: 250,
+                      height: 200,
                       child: Image.asset(
                         'asset/image.png', // Path to your logo image
                         fit: BoxFit.contain,
