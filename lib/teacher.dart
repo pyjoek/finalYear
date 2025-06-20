@@ -159,7 +159,7 @@ class _TeacherPageState extends State<TeacherPage> {
   }
 
   // Logout function
-  Future<void> _logout() async {
+  Future<void> logout() async {
     await storage.delete(key: 'access_token');  // Delete token to log out
     Navigator.pushReplacementNamed(context, '/login');  // Redirect to login screen
   }
