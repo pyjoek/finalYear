@@ -15,6 +15,7 @@ class _StudentPageState extends State<StudentPage> {
   final storage = FlutterSecureStorage();
   String studentName = '';
   String studentEmail = '';
+  String regno = '';
   final addr = '127.0.0.1:5000';
   Color baseColor = Colors.orange;
   Color bgColor = const Color.fromARGB(255, 47, 47, 47);
@@ -54,10 +55,12 @@ class _StudentPageState extends State<StudentPage> {
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
+        print(data);
         setState(() {
           studentEmail = data['email'];
           studentName = data['name']; // Fetch name
           department = data['department'];
+          regno = data['regno'];
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -138,10 +141,18 @@ class _StudentPageState extends State<StudentPage> {
                   .toList(),
             ),
           ),
-          InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MyPieChart())),
-            child: Text("View Chart Report"),
-          )
+          // InkWell(
+          //   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MyPieChart())),
+          //   // child: Text("View Chart Report"),
+          //   child: Container(
+          //     child: Padding(
+          //       padding: const EdgeInsets.only(left: 55, right: 55),
+          //       child: ElevatedButton(
+          //       onPressed: () => {},
+          //       child: Text("View Chart Report")),
+          //     ),
+          //   )
+          // )
         ],
       ),
     );
@@ -188,56 +199,67 @@ class _StudentPageState extends State<StudentPage> {
         ],
       ),
       drawer: _buildDrawer(), // Drawer with attendance data
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 30,),
-                  CircleAvatar(
-                    child: Text(studentName[0].toUpperCase(),
-                    style: TextStyle(fontSize: 70),
+      body: Center(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 30,),
+                    CircleAvatar(
+                      child: Text(studentName[0].toUpperCase(),
+                      style: TextStyle(fontSize: 70),
+                      ),
+                      radius: 50,
                     ),
-                    radius: 50,
-                  ),
-                  SizedBox(height: 10,),
-                  Text(
-                    "$studentName",
-                    style: TextStyle(fontSize: 28, color: textC, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "$studentEmail",
-                    style: TextStyle(fontSize: 15, color: textC, fontWeight: FontWeight.w100),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "$department",
-                    style: TextStyle(fontSize: 18, color: textC, fontWeight: FontWeight.w300),
-                  ),
-                ],
+                    SizedBox(height: 10,),
+                    Text(
+                      "$studentName".toUpperCase(),
+                      style: TextStyle(fontSize: 50, color: textC, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "$studentEmail",
+                      style: TextStyle(fontSize: 30, color: textC, fontWeight: FontWeight.w100),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "$regno",
+                      style: TextStyle(fontSize: 25, color: textC, fontWeight: FontWeight.w100),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "$department",
+                      style: TextStyle(fontSize: 18, color: textC, fontWeight: FontWeight.w500),
+                    ),
+                    SizedBox(height: 30,),
+                    Container(
+                      child: Text("vipindi alivyo attend / total to be attended * 100"),
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: isAttendanceMarked ? null : _markAttendance, // Disable if attendance is marked
-              child: Text(
-                isAttendanceMarked ? 'Attendance marked for today' : 'Mark Attendance',
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: baseColor,
-                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                textStyle: TextStyle(fontSize: 16, color: textC, fontWeight: FontWeight.bold),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: isAttendanceMarked ? null : _markAttendance, // Disable if attendance is marked
+                child: Text(
+                  isAttendanceMarked ? 'Attendance marked for today' : 'Mark Attendance',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: baseColor,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  textStyle: TextStyle(fontSize: 16, color: textC, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

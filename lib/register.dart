@@ -15,7 +15,8 @@ class _RegisterState extends State<Register> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _teacherCodeController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController(); // Added for name
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _regnumber = TextEditingController();
   String? _selectedUserType;
   String? _selectedDepartment;
   final addr = '127.0.0.1:5000';
@@ -32,6 +33,11 @@ class _RegisterState extends State<Register> {
     if (!_emailController.text.contains('@')) {
       _showErrorDialog("Invalid email address.");
       return;
+    }
+
+    if (!_regnumber.text.isNotEmpty) {
+      _showErrorDialog("Registration Number needed");
+      // return;
     }
 
     // Ensure name is entered
@@ -68,6 +74,7 @@ class _RegisterState extends State<Register> {
           'user_type': _selectedUserType,
           'department': _selectedDepartment,
           'teacher_code': _teacherCodeController.text,
+          'reg_no': _regnumber.text
         }),
       );
 
@@ -215,6 +222,18 @@ class _RegisterState extends State<Register> {
                       ),
                       const SizedBox(height: 10),
                       if (_selectedUserType == 'Student') ...[
+                        TextField(
+                        controller: _regnumber,
+                        obscureText: false,
+                        decoration: InputDecoration(
+                          labelText: 'Registration Number',
+                          prefixIcon: const Icon(Icons.person_pin),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                         DropdownButtonFormField<String>(
                           value: _selectedDepartment,
                           onChanged: (newValue) {

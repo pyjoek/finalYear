@@ -26,7 +26,7 @@ class MyHome extends StatefulWidget {
 }
 
 class MyHomeState extends State<MyHome> {
-  String? ssid = 'Unknown'; // Holds the Wi-Fi SSID or "Unknown"
+  String? ssid = 'Unknown';
   final String allowedSSID = "ENG_NET";
   
 

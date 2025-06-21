@@ -1,3 +1,4 @@
+import 'package:finalyear/forgotpassword.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -195,6 +196,10 @@ class _LoginState extends State<Login> {
                       ),
                       child: Text("Login", style: TextStyle(fontSize: 18)),
                     ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Forgot())),
+                     child: Text("Forgot Password")),
                     SizedBox(height: 10),
                     OutlinedButton.icon(
                       onPressed: biometricLogin,

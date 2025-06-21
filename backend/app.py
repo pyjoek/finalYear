@@ -28,6 +28,7 @@ class Student(db.Model):
     password = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(100), nullable=False)  # Name field added
     department = db.Column(db.String(100), nullable=False)
+    regno = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
         return f'<Student {self.email}>'
@@ -54,6 +55,7 @@ def register():
     user_type = data.get('user_type')
     department = data.get('department')
     teacher_code = data.get('teacher_code')
+    regno = data.get('reg_no')
 
     if not email or not password or not user_type:
         return jsonify(message="Email, password, and user type are required."), 400
@@ -75,7 +77,7 @@ def register():
         if Student.query.filter_by(email=email).first():
             return jsonify(message="Student with this email already exists."), 400
 
-        new_student = Student(email=email, password=password, name=name, department=department)
+        new_student = Student(email=email, password=password, name=name, department=department, regno=regno)
         db.session.add(new_student)
         db.session.commit()
         return jsonify(message="Student registered successfully."), 201
@@ -123,7 +125,8 @@ def protected():
         return jsonify(
             email=student.email,
             name=student.name,
-            department=student.department
+            department=student.department,
+            regno=student.regno
         ), 200
     if teacher:
         return jsonify(
@@ -132,24 +135,28 @@ def protected():
 
     return jsonify(message="Invalid user or token."), 404
 
-# @app.route('/attendance_history', methods=['GET'])
-# @jwt_required()
-# def attendance_history():
-#     student_id = get_jwt_identity()
-#     student = db.session.get(Student, student_id)  # Updated to use db.session.get()
+@app.route('/reset_password', methods=['POST'])
+def reset_password():
+    data = request.get_json()
+    email        = data.get('email')
+    regno        = data.get('regno')
+    new_password = data.get('new_password')
 
-#     if student:
-#         # Get the student's attendance records
-#         attendance_records = Attendance.query.filter_by(student_id=student.id).all()
-#         attendance_data = []
-#         for record in attendance_records:
-#             attendance_data.append({
-#                 'date': record.date.strftime('%Y-%m-%d'),
-#                 'status': record.status
-#             })
-#         return jsonify(attendance=attendance_data), 200
+    if not email or not regno or not new_password:
+        return jsonify(message="Email, regno, and new password are required."), 400
 
-#     return jsonify(message="Student not found or invalid token."), 404
+    # Look for a matching student
+    student = Student.query.filter_by(email=email, regno=regno).first()
+    if not student:
+        return jsonify(message="User not found."), 404
+
+    # TODO: hash in production
+    student.password = new_password
+    db.session.commit()
+
+    return jsonify(message="Password updated."), 200
+
+
 
 @app.route('/attendance_history', methods=['GET'])
 @jwt_required()
@@ -239,7 +246,8 @@ def list_students():
             'id': student.id,
             'name': student.name,
             'email': student.email,
-            'department': student.department
+            'department': student.department,
+            'regno': student.regno
         }
         for student in students
     ]

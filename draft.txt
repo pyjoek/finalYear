@@ -1,0 +1,3 @@
+vipindi alivyo attend / total to be attended * 100
+forgot passwordin teachers page make student clickable
+inside the teachers profile place a qrcode
