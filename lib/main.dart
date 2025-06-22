@@ -29,7 +29,6 @@ class MyHomeState extends State<MyHome> {
   String? ssid = 'Unknown';
   final String allowedSSID = "ENG_NET";
   
-
   @override
   void initState() {
     super.initState();

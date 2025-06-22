@@ -35,12 +35,15 @@
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
             <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.INTERNET" />
+    <queries>
+        <intent>
+            <!-- <action android:name="android.intent.action.PROCESS_TEXT"/> -->
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="http" />
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
