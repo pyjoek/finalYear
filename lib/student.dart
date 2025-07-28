@@ -156,6 +156,7 @@ class _StudentPageState extends State<StudentPage> {
       ),
     );
   }
+  
 
   // Mark attendance for today
   _markAttendance() async {
@@ -236,9 +237,7 @@ class _StudentPageState extends State<StudentPage> {
                       style: TextStyle(fontSize: 18, color: textC, fontWeight: FontWeight.w500),
                     ),
                     SizedBox(height: 30,),
-                    Container(
-                      child: Text("vipindi alivyo attend / total to be attended * 100"),
-                    )
+                    
                   ],
                 ),
               ),

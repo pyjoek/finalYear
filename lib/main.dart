@@ -27,7 +27,7 @@ class MyHome extends StatefulWidget {
 
 class MyHomeState extends State<MyHome> {
   String? ssid = 'Unknown';
-  final String allowedSSID = "ENG_NET";
+  final String allowedSSID = "Anonymous";
   
   @override
   void initState() {

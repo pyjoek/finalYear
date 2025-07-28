@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:finalyear/login.dart';
+import 'package:finalyear/studentDetails.dart';
 import 'dart:convert';
 
 class TeacherPage extends StatefulWidget {
@@ -112,13 +113,27 @@ class _TeacherPageState extends State<TeacherPage> {
               width: MediaQuery.of(context).size.width * 0.6,
               child: Padding(
                 padding: const EdgeInsets.all(15),
+                child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StudentDetailsPage(student: students[index]),
+                    ),
+                  );
+                },
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text((students[index]['name']).toUpperCase(), 
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                    Text(
+                      (students[index]['name']).toUpperCase(),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
                     Text(students[index]['email']),
                   ],
                 ),
+              ),
+
               ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
