@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:finalyear/register.dart';
 import 'package:finalyear/login.dart';
-import 'dart:io' show Platform; // For platform checks
-import 'package:network_info_plus/network_info_plus.dart'; // Supports multiple platforms
+import 'dart:io' show Platform;
+import 'package:network_info_plus/network_info_plus.dart';
 
 void main() => runApp(const MyApp());
 
