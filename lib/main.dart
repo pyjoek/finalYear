@@ -9,6 +9,7 @@ void main() => runApp(const MyApp());
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
@@ -27,7 +28,7 @@ class MyHome extends StatefulWidget {
 
 class MyHomeState extends State<MyHome> {
   String? ssid = 'Unknown';
-  final String allowedSSID = "Anonymous";
+  final String allowedSSID = "ENG_NET";
   
   @override
   void initState() {
